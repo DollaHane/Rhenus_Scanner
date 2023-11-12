@@ -3,6 +3,7 @@
     "name": "rhenusapp",
     "slug": "rhenusapp",
     "version": "1.0.0",
+    "scheme": "rhenusApp",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -38,8 +39,9 @@
         "expo-camera",
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
-        },
-      ]
+        }
+      ],
+      "expo-router"
     ]
   }
 }

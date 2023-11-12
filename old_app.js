@@ -1,6 +1,6 @@
 import { Camera } from "expo-camera";
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View, StatusBar } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Alert } from 'react-native';
 import { BarCodeScanner } from "expo-barcode-scanner";
 import * as DocumentPicker from "expo-document-picker";
