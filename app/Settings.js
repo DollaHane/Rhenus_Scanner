@@ -67,26 +67,30 @@ export default function Settings() {
   };
 
   return (
-    <View>
-      <View className="absolute top-10 left-10 flex-row gap-5">
+    <View className="p-2">
+      <View className=" top-5 px-5 flex-row gap-5">
         <TouchableOpacity
           onPress={pickDocument}
-          className="w-20 h-10 bg-zinc-600 text-stone-50 items-center justify-center rounded-lg"
+          className="w-20 h-10 bg-zinc-800 text-stone-50 items-center justify-center rounded-lg"
         >
           <Text className="text-zinc-100">Select File</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="w-20 h-10 bg-zinc-600 text-stone-50 items-center justify-center rounded-lg">
+        <TouchableOpacity className="w-20 h-10 bg-zinc-800 text-stone-50 items-center justify-center rounded-lg">
           <Text className="text-zinc-100">Clear</Text>
         </TouchableOpacity>
       </View>
-      <Text className="absolute w-full text-rose-500 italic top-24 left-10 truncate">
-        Selected file: {fileName}
-      </Text>
-      <View>
+
+      <View className="w-full top-10 px-5 text-rose-500 italic truncate">
+        <Text>Currently reading data from file name:</Text>
+        {datas.length > 0 && <Text className='text-rose-500 italic font-bold'>{datas[0].filename}</Text>}
+      </View>
+
+      <View className="top-16 px-5 w-full">
+        <Text className='font-bold text-xl'>Upload history:</Text>
         {datas.map((files) => (
           <View key={files.id}>
-            <Text>{files.filename}</Text>
-            <Text>{files.filepath}</Text>
+            <Text className='mt-5 pt-2 border-t-2 italic font-semibold border-stone-600'>{files.filename}</Text>
+            <Text className='text-xs text-stone-400'>{files.filepath}</Text>
           </View>
         ))}
       </View>

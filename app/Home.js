@@ -23,7 +23,8 @@ export default function Home() {
   const [fileName, setFileName] = useState([])
   const [csvData, setCsvData] = useState();
 
-  const timestamp = new Date().getTime()
+  const timestamp = JSON.stringify(new Date().getTime())
+  console.log('timestamp:', timestamp)
   
   console.log('filePath:', filePath)
   console.log('fileName:', fileName)
@@ -35,13 +36,14 @@ export default function Home() {
 
   // _______________________________________________________________
   // Fetch Latest File: = OK
-  useEffect(() => {
+
+  const query = () => {
     db.transaction((tx) => {
       tx.executeSql(
         "CREATE TABLE IF NOT EXIST csvdatas (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT)"
       );
     });
-
+  
     db.transaction(tx => {
       tx.executeSql(
         'CREATE TABLE IF NOT EXIST scanhistory (id INTEGER PRIMARY KEY AUTOINCREMENT, partnumber TEXT, locations TEXT, timestamp TEXT)'
@@ -61,6 +63,10 @@ export default function Home() {
         (txObj, error) => console.log(error)
       );
     });
+  }
+
+  useEffect(() => {
+    query()
   }, [db]);
 
 
@@ -103,12 +109,14 @@ export default function Home() {
     setScanData(data);
     alert(`Part number ${data} scanned successfully!`);
     setReadyCamera(false);
+    fetchLocations(data)
   };
 
   // Fetch locations of scanned part#:
-  const fetchLocations = () => {
-    if (scanData) {
-      const removeP = scanData.replace("P", "");
+  const fetchLocations = (data) => {
+    console.log('data from function:', data)
+    if (data) {
+      const removeP = data.replace("P", "");
       setPartNumber(removeP);
     }
 
@@ -145,7 +153,7 @@ useEffect(() => {
       (tx) => {
         tx.executeSql(
           'INSERT INTO scanhistory (partnumber, locations, timestamp) values (?, ?, ?)',
-          [partNumber, JSON.stringify(partLocation), timestamp],
+          [partNumber, JSON.stringify(partLocation)],
           (_, resultSet) => {
             console.log("resultSetId:", resultSet.insertId);
             console.log(`Successfully saved scan history of part number: ${partNumber}`);
@@ -210,21 +218,19 @@ useEffect(() => {
         
       </View>
       <TouchableOpacity
-              className="bg-blue-900 text-stone-100 mt-5 w-20 h-10 items-center justify-center rounded-md"
-              title="CLEAR"
+              className="absolute top-5 left-10 bg-zinc-800 text-stone-100 mt-5 w-20 h-10 items-center justify-center rounded-md"
+              title="REFRESH"
               onPress={() => {
-                setScanData(undefined);
-                setPartLocation([]);
+                query
               }}
             >
-              <Text className="text-stone-100 font-semibold">CLEAR</Text>
+              <Text className="text-stone-100 font-semibold">REFRESH</Text>
             </TouchableOpacity>
       <Text className="absolute w-full text-rose-500 italic top-24 left-10 truncate">
         Selected file: {fileName}
       </Text>
       <TouchableOpacity
         onPress={() => setReadyCamera(true)}
-        // disabled={scanData}
         className="bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
         <Text className="text-stone-800 text-3xl font-bold">SCAN</Text>
