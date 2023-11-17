@@ -1,15 +1,15 @@
-import React from 'react'
+import React from "react";
 import { Camera } from "expo-camera";
 import { useState, useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { Alert } from 'react-native';
+import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Papa from "papaparse";
-import NavBar from './components/NavBar';
-import { db } from '../db/db';
+import NavBar from "./components/NavBar";
+import { db } from "../db/db";
+import { Scan, RefreshCw } from "lucide-react-native";
 
 export default function Home() {
-
   // Camera State
   const [hasPermission, setHasPermission] = useState(null);
   const [readyCamera, setReadyCamera] = useState(false);
@@ -20,39 +20,40 @@ export default function Home() {
   // File State
   const [datas, setDatas] = useState([]);
   const [filePath, setFilePath] = useState([]);
-  const [fileName, setFileName] = useState([])
+  const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
 
-  const timestamp = JSON.stringify(new Date().getTime())
-  console.log('timestamp:', timestamp)
-  
-  console.log('filePath:', filePath)
-  console.log('fileName:', fileName)
-  console.log('csvData:', csvData)
+  const timestamp = JSON.stringify(new Date().getTime());
+  console.log("timestamp:", timestamp);
+
+  console.log("filePath:", filePath);
+  console.log("fileName:", fileName);
+  console.log("csvData:", csvData);
   console.log("partNumber", partNumber);
   console.log("partLocation", partLocation);
-
-
 
   // _______________________________________________________________
   // Fetch Latest File: = OK
 
   const query = () => {
+
+    console.log('Querying database')
+
     db.transaction((tx) => {
       tx.executeSql(
         "CREATE TABLE IF NOT EXIST csvdatas (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT)"
       );
     });
-  
-    db.transaction(tx => {
+
+    db.transaction((tx) => {
       tx.executeSql(
-        'CREATE TABLE IF NOT EXIST scanhistory (id INTEGER PRIMARY KEY AUTOINCREMENT, partnumber TEXT, locations TEXT, timestamp TEXT)'
+        "CREATE TABLE IF NOT EXIST scanhistory (id INTEGER PRIMARY KEY AUTOINCREMENT, partnumber TEXT, locations TEXT, timestamp TEXT)"
       );
     });
-  
-    db.transaction(tx => {
+
+    db.transaction((tx) => {
       tx.executeSql(
-        'SELECT * FROM csvdatas',
+        "SELECT * FROM csvdatas",
         [],
         (txObj, resultSet) => {
           const data = resultSet.rows._array;
@@ -63,15 +64,14 @@ export default function Home() {
         (txObj, error) => console.log(error)
       );
     });
-  }
+    console.log('Query complete..')
+  };
 
   useEffect(() => {
-    query()
+    query();
   }, [db]);
 
-
-
- // _______________________________________________________________
+  // _______________________________________________________________
   // Translate CSV File:
   const translateCsv = async () => {
     try {
@@ -98,23 +98,21 @@ export default function Home() {
   };
 
   useEffect(() => {
-    translateCsv()
+    translateCsv();
   }, [filePath]);
 
-
-
-   // _______________________________________________________________
+  // _______________________________________________________________
   // Scan barcode:
   const handleBarCodeScanned = ({ type, data }) => {
     setScanData(data);
     alert(`Part number ${data} scanned successfully!`);
     setReadyCamera(false);
-    fetchLocations(data)
+    fetchLocations(data);
   };
 
   // Fetch locations of scanned part#:
   const fetchLocations = (data) => {
-    console.log('data from function:', data)
+    console.log("data from function:", data);
     if (data) {
       const removeP = data.replace("P", "");
       setPartNumber(removeP);
@@ -144,34 +142,32 @@ export default function Home() {
     fetchLocations();
   }, [scanData]);
 
-
   // ______________________________________________________________
-// Save scan history
-useEffect(() => {
-  if (partLocation && partLocation.length > 0) {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          'INSERT INTO scanhistory (partnumber, locations, timestamp) values (?, ?, ?)',
-          [partNumber, JSON.stringify(partLocation)],
-          (_, resultSet) => {
-            console.log("resultSetId:", resultSet.insertId);
-            console.log(`Successfully saved scan history of part number: ${partNumber}`);
-          },
-          (error) => {
-            console.error(error);
-          }
-        );
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
-  }
-}, [partLocation]);
-
-
-
+  // Save scan history
+  useEffect(() => {
+    if (partLocation && partLocation.length > 0) {
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            "INSERT INTO scanhistory (partnumber, locations, timestamp) values (?, ?, ?)",
+            [partNumber, JSON.stringify(partLocation)],
+            (_, resultSet) => {
+              console.log("resultSetId:", resultSet.insertId);
+              console.log(
+                `Successfully saved scan history of part number: ${partNumber}`
+              );
+            },
+            (error) => {
+              console.error(error);
+            }
+          );
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
+    }
+  }, [partLocation]);
 
   // _______________________________________________________________
   // Display camera
@@ -207,33 +203,30 @@ useEffect(() => {
     );
   }
 
-
   // _______________________________________________________________
   // UI
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
       <Camera />
       {readyCamera && renderCamera()}
-      <View className="absolute top-10 left-10 flex-row gap-5">
-        
-      </View>
       <TouchableOpacity
-              className="absolute top-5 left-10 bg-zinc-800 text-stone-100 mt-5 w-20 h-10 items-center justify-center rounded-md"
-              title="REFRESH"
-              onPress={() => {
-                query
-              }}
-            >
-              <Text className="text-stone-100 font-semibold">REFRESH</Text>
-            </TouchableOpacity>
-      <Text className="absolute w-full text-rose-500 italic top-24 left-10 truncate">
-        Selected file: {fileName}
+        className="absolute top-0 left-5 bg-zinc-100 mt-5 w-10 h-10 items-center justify-center rounded-md"
+        title="REFRESH"
+        onPress={query}
+      >
+        <RefreshCw className="text-zinc-800" size={30} />
+      </TouchableOpacity>
+      <Text className="absolute w-full text-zinc-800 italic top-5 left-16 truncate">
+        Selected file:
+      </Text>
+      <Text className="absolute w-full text-rose-500 italic top-10 left-16 font-bold truncate">
+        {fileName}
       </Text>
       <TouchableOpacity
         onPress={() => setReadyCamera(true)}
         className="bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
-        <Text className="text-stone-800 text-3xl font-bold">SCAN</Text>
+        <Scan className=" text-zinc-700" size={88} />
       </TouchableOpacity>
 
       {scanData && (
@@ -272,8 +265,7 @@ useEffect(() => {
         </View>
       )}
 
-      <NavBar/>
-
+      <NavBar />
     </View>
   );
 }
