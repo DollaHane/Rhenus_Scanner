@@ -134,30 +134,55 @@ export default function Settings() {
 
       {/* SETTINGS PAGE INFO MODAL */}
       {info === true && (
-        <View className="flex w-full h-full bg-stone-50 rounded-lg p-5">
+        <View className="flex w-full h-full bg-stone-50 rounded-lg">
           <View>
             <TouchableOpacity
               onPress={() => setInfo(false)}
-              className="absolute w-20 h-10 right-0 bg-stone-50 text-stone-50 items-center justify-center rounded-lg"
+              className="absolute w-20 h-10 top-5 right-5 bg-stone-50 text-stone-50 items-center justify-center rounded-lg"
             >
               <X className="text-zinc-800" size={30} />
             </TouchableOpacity>
           </View>
-          <View className="w-full h-full top-10 items-start p-5">
-            <Text className="text-2xl font-bold">File Selection Guide:</Text>
-            <Text className="text-lg mt-5">Selection:</Text>
+          <View className="w-full h-full top-5 px-5 items-start">
+            <Text className="text-2xl font-bold text-zinc-800">User Guide:</Text>
+            <Text className="text-lg mt-5 font-semibold text-zinc-800">File Selection:</Text>
+            <Text className="mt-2 text-zinc-700 text-base">
+              A valid .csv file is required in order to complete a scan cycle on this application. 
+              To select a file, press the <Text  className='italic font-semibold'>"Select File"</Text> button on the 
+              <Text className='italic font-semibold'>"Settings"</Text> page. A .csv file can then be selected from 
+              any directory on the device. (Moving the file will result in errors / broken file path.)  
+            </Text>
+            <Text className="mt-2 text-zinc-700 text-base">
+              The currently selected file will be displayed under <Text className='italic font-semibold'>"Currently reading data from file name:"</Text> which 
+              represents the .csv file being used to find the locations of parts based on the part number scanned.
+            </Text>
+            <Text className="text-lg mt-5 font-semibold text-zinc-800">CSV File Format:</Text>
+            <Text className="mt-2 text-zinc-700 text-base">
+              In order to correctly process the data within the selected .csv file, all the data needs to appear 
+              within the first column of the .csv file.   
+            </Text>
+            <Text className="mt-2 text-zinc-700 text-base italic font-semibold">
+              Eg.: ",1E04957H01,WCC-13-3..,WCS-4-2..,1109C..," 
+            </Text>
+            <Text className="mt-2 text-zinc-700 text-base">
+              As per the above example, after a successful scan event, the application searches for a matching the part number (first entry in the string) 
+              and then returns that part numbers warehouse locations (subsequent entries seperated by a comma).
+            </Text>
+            <Text className="mt-5 text-zinc-700 text-base italic font-bold">
+              (Please contact the developer in the event the structure of the .csv file has been revised.)
+            </Text>
           </View>
         </View>
       )}
 
 
       {/* SETTINGS PAGE UI */}
-      <View className=" top-5 px-5 flex-row justify-between">
+      <View className="top-5 px-5 flex-row justify-between">
         <TouchableOpacity
           onPress={pickDocument}
-          className="w-20 h-10 bg-zinc-800 text-stone-50 items-center justify-center rounded-lg"
+          className="w-28 h-10 bg-zinc-800 text-stone-50 items-center justify-center rounded-lg"
         >
-          <Text className="text-zinc-100">Select File</Text>
+          <Text className="text-zinc-100 font-bold">Select File</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setInfo(true)}
@@ -175,7 +200,7 @@ export default function Settings() {
       </View>
 
       <View className="top-16 px-5 w-full">
-        <Text className="font-bold text-xl">Upload history:</Text>
+        <Text className="font-bold text-xl">Selection History:</Text>
         {datas.map((files) => (
           <View key={files.id}>
             <Text className="mt-5 pt-2 border-t-2 italic font-semibold border-stone-600">
