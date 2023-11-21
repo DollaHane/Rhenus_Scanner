@@ -1,7 +1,8 @@
 import React from "react";
 import { Camera } from "expo-camera";
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView } from "react-native";
+import ScrollIndicator from "react-native-scroll-indicator";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Papa from "papaparse";
@@ -36,8 +37,7 @@ export default function Home() {
   // Fetch Latest File: = OK
 
   const query = () => {
-
-    console.log('Querying database')
+    console.log("Querying database");
 
     db.transaction((tx) => {
       tx.executeSql(
@@ -64,7 +64,7 @@ export default function Home() {
         (txObj, error) => console.log(error)
       );
     });
-    console.log('Query complete..')
+    console.log("Query complete..");
   };
 
   useEffect(() => {
@@ -142,33 +142,6 @@ export default function Home() {
     fetchLocations();
   }, [scanData]);
 
-  // ______________________________________________________________
-  // Save scan history
-  useEffect(() => {
-    if (partLocation && partLocation.length > 0) {
-      db.transaction(
-        (tx) => {
-          tx.executeSql(
-            "INSERT INTO scanhistory (partnumber, locations, timestamp) values (?, ?, ?)",
-            [partNumber, JSON.stringify(partLocation)],
-            (_, resultSet) => {
-              console.log("resultSetId:", resultSet.insertId);
-              console.log(
-                `Successfully saved scan history of part number: ${partNumber}`
-              );
-            },
-            (error) => {
-              console.error(error);
-            }
-          );
-        },
-        (error) => {
-          console.error(error);
-        }
-      );
-    }
-  }, [partLocation]);
-
   // _______________________________________________________________
   // Display camera
   const renderCamera = () => {
@@ -210,7 +183,7 @@ export default function Home() {
       <Camera />
       {readyCamera && renderCamera()}
       <TouchableOpacity
-        className="absolute top-0 left-5 bg-zinc-100 mt-5 w-10 h-10 items-center justify-center rounded-md"
+        className="absolute top-0 left-5 bg-stone-50 mt-5 w-10 h-10 items-center justify-center rounded-md"
         title="REFRESH"
         onPress={query}
       >
@@ -230,37 +203,39 @@ export default function Home() {
       </TouchableOpacity>
 
       {scanData && (
-        <View className="absolute h-[500px] bottom-2 mb-5 p-5 items-center bg-stone-100 border border-stone-500 rounded-lg shadow-lg">
-          <Text className="mt-1 font-bold text-rose-500 text-xl">
-            Part Number: {scanData}
-          </Text>
-
-          <View className="w-11/12">
-            <Text className="my-5 font-bold text-rose-500 text-lg">
-              Locations:
+        <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
+          <View className="absolute top-5 w-11/12 h-[70vh] p-5 items-center bg-stone-50  z-50">
+            <Text className="mt-1 font-bold text-zinc-800 text-xl">
+              Part Number: {scanData}
             </Text>
 
-            <View className="flex flex-wrap gap-2 w-full">
-              {partLocation.map((location) => (
-                <Text className="italic" key={location}>
-                  {location}
-                </Text>
-              ))}
-            </View>
-          </View>
+            <View className="w-full h-[300px] mt-5 border border-stone-300 rounded-lg px-2">
+              <Text className="font-bold text-rose-500 text-lg">
+                Locations:
+              </Text>
 
-          <View className="flex flex-row gap-4">
-            <TouchableOpacity
-              className="bg-blue-900 text-stone-100 mt-5 w-20 h-10 items-center justify-center rounded-md"
-              title="CLEAR"
-              onPress={() => {
-                setScanData(undefined);
-                setPartLocation([]);
-              }}
-            >
-              <Text className="text-stone-100 font-semibold">CLEAR</Text>
-            </TouchableOpacity>
-            <Text className="my-5 italic text-sm">Clear to scan again.</Text>
+              <ScrollView className="w-full">
+                {partLocation.map((location) => (
+                  <Text className="italic mt-2 px-2" key={location}>
+                    - {location}
+                  </Text>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View className="absolute bottom-5 w-full flex flex-row items-center justify-between">
+              <Text className="italic text-lg ">Clear to scan again.</Text>
+              <TouchableOpacity
+                className="bg-zinc-800 text-stone-100 w-20 h-10 items-center justify-center rounded-md"
+                title="CLEAR"
+                onPress={() => {
+                  setScanData(undefined);
+                  setPartLocation([]);
+                }}
+              >
+                <Text className="text-stone-100 font-semibold">CLEAR</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}

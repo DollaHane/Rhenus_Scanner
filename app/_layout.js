@@ -6,7 +6,6 @@ export default function Layout() {
   return (
     <Stack>
       <Stack.Screen name="Home"/>
-      <Stack.Screen name="History"/>
       <Stack.Screen name="Settings"/>
     </Stack>
   )

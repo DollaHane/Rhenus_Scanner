@@ -3489,10 +3489,10 @@ expo-document-picker@~11.5.4:
   resolved "https://registry.npmjs.org/expo-document-picker/-/expo-document-picker-11.5.4.tgz"
   integrity sha512-4lpRixi33kjoQQy9lfrGs48yFRMOgBgdnqjYWVFe85WFy/WkEoFC2E8usxcFdrIigtfy9Z+HY3/je4lHEYqyLg==
 
-expo-file-system@~15.4.0, expo-file-system@~15.4.4:
-  version "15.4.4"
-  resolved "https://registry.npmjs.org/expo-file-system/-/expo-file-system-15.4.4.tgz"
-  integrity sha512-F0xS88D85F7qVQ61r0qBnzh6VW/s6iIl+VaQEEi2nAIOQHw1JIEj4yCXPLTtbyn5VmArbe2dSL3KYz1V+BLkKA==
+expo-file-system@~15.4.0, expo-file-system@~15.4.4, expo-file-system@~15.4.5:
+  version "15.4.5"
+  resolved "https://registry.npmjs.org/expo-file-system/-/expo-file-system-15.4.5.tgz"
+  integrity sha512-xy61KaTaDgXhT/dllwYDHm3ch026EyO8j4eC6wSVr/yE12MMMxAC09yGwy4f7kkOs6ztGVQF5j7ldRzNLN4l0Q==
   dependencies:
     uuid "^3.4.0"
 
@@ -5966,10 +5966,15 @@ react-native-screens@*, "react-native-screens@>= 3.0.0", react-native-screens@~3
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-"react-native-svg@^12.0.0 || ^13.0.0", react-native-svg@^14.0.0:
-  version "14.0.0"
-  resolved "https://registry.npmjs.org/react-native-svg/-/react-native-svg-14.0.0.tgz"
-  integrity sha512-17W/gWXRUMS7p7PSHu/WyGkZUc1NzRTGxxXc0VqBLjzKSchyb0EmgsiWf9aKmfC6gmY0wcsmKZcGV41bCcNfBA==
+react-native-scroll-indicator@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/react-native-scroll-indicator/-/react-native-scroll-indicator-0.1.0.tgz"
+  integrity sha512-fErMTBZe/aNZgKW1QYKXvQnsnODqBkQ7j/2K89DkimUqUgJAv+mltsj05JUXTu8sJBJznoFXwmW+3h2/Dcfbog==
+
+"react-native-svg@^12.0.0 || ^13.0.0", react-native-svg@13.9.0:
+  version "13.9.0"
+  resolved "https://registry.npmjs.org/react-native-svg/-/react-native-svg-13.9.0.tgz"
+  integrity sha512-Ey18POH0dA0ob/QiwCBVrxIiwflhYuw0P0hBlOHeY4J5cdbs8ngdKHeWC/Kt9+ryP6fNoEQ1PUgPYw2Bs/rp5Q==
   dependencies:
     css-select "^5.1.0"
     css-tree "^1.1.3"

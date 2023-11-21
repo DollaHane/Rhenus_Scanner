@@ -146,25 +146,25 @@ export default function Settings() {
           <View className="w-full h-full top-5 px-5 items-start">
             <Text className="text-2xl font-bold text-zinc-800">User Guide:</Text>
             <Text className="text-lg mt-5 font-semibold text-zinc-800">File Selection:</Text>
-            <Text className="mt-2 text-zinc-700 text-base">
+            <Text className="mt-2 text-zinc-700 text-xs">
               A valid .csv file is required in order to complete a scan cycle on this application. 
               To select a file, press the <Text  className='italic font-semibold'>"Select File"</Text> button on the 
               <Text className='italic font-semibold'>"Settings"</Text> page. A .csv file can then be selected from 
               any directory on the device. (Moving the file will result in errors / broken file path.)  
             </Text>
-            <Text className="mt-2 text-zinc-700 text-base">
+            <Text className="mt-2 text-zinc-700 text-xs">
               The currently selected file will be displayed under <Text className='italic font-semibold'>"Currently reading data from file name:"</Text> which 
               represents the .csv file being used to find the locations of parts based on the part number scanned.
             </Text>
             <Text className="text-lg mt-5 font-semibold text-zinc-800">CSV File Format:</Text>
-            <Text className="mt-2 text-zinc-700 text-base">
+            <Text className="mt-2 text-zinc-700 text-xs">
               In order to correctly process the data within the selected .csv file, all the data needs to appear 
               within the first column of the .csv file.   
             </Text>
-            <Text className="mt-2 text-zinc-700 text-base italic font-semibold">
+            <Text className="mt-2 text-zinc-700 text-xs italic font-semibold">
               Eg.: ",1E04957H01,WCC-13-3..,WCS-4-2..,1109C..," 
             </Text>
-            <Text className="mt-2 text-zinc-700 text-base">
+            <Text className="mt-2 text-zinc-700 text-xs">
               As per the above example, after a successful scan event, the application searches for a matching the part number (first entry in the string) 
               and then returns that part numbers warehouse locations (subsequent entries seperated by a comma).
             </Text>
