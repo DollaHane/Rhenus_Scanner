@@ -24,7 +24,7 @@ export default function Settings() {
 
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatas",
+        "SELECT * FROM csvdatas ORDER BY id DESC",
         null,
         (txObj, resultSet) => {
           setDatas(resultSet.rows._array);
