@@ -7,16 +7,18 @@ import {
   View,
   ScrollView,
   TextInput,
+  Dimensions
 } from "react-native";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
+import BarcodeMask from "react-native-barcode-mask";
 import Papa from "papaparse";
 import NavBar from "./components/NavBar";
 import { db } from "../db/db";
-import { Scan, RefreshCw, Search } from "lucide-react-native";
+import { Scan, RefreshCw, Search, X } from "lucide-react-native";
 
 export default function Home() {
-  // Camera State
+  // Camera State:
   const [hasPermission, setHasPermission] = useState(null);
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
@@ -24,12 +26,18 @@ export default function Home() {
   const [partNumber, setPartNumber] = useState();
   const [partLocation, setPartLocation] = useState([]);
 
-  // File State
+  // File State:
   const [filePath, setFilePath] = useState([]);
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
 
-  console.log('input:', input)
+  // Barcode Variables:
+  const width = Dimensions.get("window").width;
+  const height = Dimensions.get("window").height;
+  const viewMinX = (width - 300) / 2; 
+  const viewMinY = (height - 100) / 2;
+
+  console.log("input:", input);
   console.log("filePath:", filePath);
   console.log("fileName:", fileName);
   console.log("partNumber", partNumber);
@@ -99,18 +107,33 @@ export default function Home() {
 
   // _______________________________________________________________
   // Scan barcode:
-  const handleBarCodeScanned = ({ type, data }) => {
-    setScanData(data);
-    alert(`Part number ${data} scanned successfully!`);
-    setReadyCamera(false);
-    fetchLocations(data);
+  const handleBarCodeScanned = ({ type, data, bounds }) => {
+    
+    const { origin } = bounds;
+    const isInCenteredRegion =
+      origin.x >= viewMinX &&
+      origin.y >= viewMinY &&
+      origin.x <= viewMinX + 300 &&
+      origin.y <= viewMinY + 100;
+
+    if (isInCenteredRegion) {
+      if (data.includes("P") && data.length > 10) {
+        setScanData(data);
+        alert(`Part number ${data} scanned successfully!`);
+        fetchLocations(data);
+      } else {
+        console.log(`Scanned data (${data}) is not a valid part number..`)
+      }
+    } else {
+      console.log('Barcode is not in the centered region:', origin);
+    }
   };
 
   // Manual Search:
   const handleManualSearch = (input) => {
-    console.log('Manual Search:', input)
+    console.log("Manual Search:", input);
     setScanData(input);
-    fetchLocations(input)
+    fetchLocations(input);
   };
 
   // Fetch locations of scanned part#:
@@ -148,17 +171,23 @@ export default function Home() {
   // Display camera
   const renderCamera = () => {
     return (
-      <View className="absolute w-full h-full p-5 z-40">
+      <View className="absolute w-full h-full z-40">
         <TouchableOpacity
-          className=" absolute top-8 left-8 z-50 w-16 h-8 bg-zinc-800 rounded-md items-center justify-center"
+          className=" absolute top-8 right-8 z-50 w-10 h-10 bg-stone-50 rounded-md items-center justify-center"
           onPress={() => setReadyCamera(false)}
         >
-          <Text className="text-zinc-100">Close</Text>
+          <X className="text-zinc-800"/>
         </TouchableOpacity>
+
+        {/* BARCODE SCANNER */}
         <BarCodeScanner
-          className="flex-1 items-center justify-center"
           onBarCodeScanned={scanData ? undefined : handleBarCodeScanned}
-        />
+          className="flex-1 items-center justify-center bg-black z-30"
+        >
+        </BarCodeScanner>
+        <View className="absolute -top-20 h-full w-full z-40">
+          <BarcodeMask edgeColor="#62B1F6" showAnimatedLine={false} width={280} height={80}/>
+        </View>
       </View>
     );
   };
@@ -182,11 +211,9 @@ export default function Home() {
   // UI
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
-
       {/* CAMERA COMPONENT */}
       <Camera />
       {readyCamera && renderCamera()}
-
 
       {/* FILE STATUS */}
       <TouchableOpacity
@@ -204,20 +231,20 @@ export default function Home() {
       </Text>
 
       {/* SEARCH BAR */}
-      <View className='absolute top-20 left-5 w-[90vw]'>
-        <View className='flex flex-row items-center justify-between'>
+      <View className="absolute top-20 left-5 w-[90vw]">
+        <View className="flex flex-row items-center justify-between">
           <TextInput
             value={input}
             onChangeText={(text) => setInput(text)}
             placeholder="Search part number.."
             className="w-full h-10 bg-zinc-100 border border-zinc-300 shadow-lg px-2 rounded-lg"
           />
-          <TouchableOpacity 
-            title="Press me" 
-            onPress={() => handleManualSearch(input)} 
+          <TouchableOpacity
+            title="Press me"
+            onPress={() => handleManualSearch(input)}
             className="absolute w-16 h-10 right-0 bg-zinc-700 text-stone-50 items-center justify-center rounded-lg"
           >
-            <Search className="text-zinc-100 font-bold"/>
+            <Search className="text-zinc-100 font-bold" />
           </TouchableOpacity>
         </View>
       </View>
@@ -272,7 +299,7 @@ export default function Home() {
         </View>
       )}
 
-        <NavBar />
+      <NavBar />
     </View>
   );
 }
