@@ -38,7 +38,7 @@ export default function Home() {
   const viewMinY = (height - 100) / 2;
 
   // _______________________________________________________________
-  // Fetch Latest File: = OK
+  // Fetch Latest File:
 
   const query = () => {
     console.log("Querying database");
@@ -53,13 +53,13 @@ export default function Home() {
       tx.executeSql(
         "SELECT * FROM csvdatas",
         [],
-        (resultSet) => {
+        (txObj, resultSet) => {
           const data = resultSet.rows._array;
           const latestFile = data[data.length - 1];
           setFilePath(latestFile.filepath);
           setFileName(latestFile.filename);
         },
-        (error) => console.log(error)
+        (txObj, error) => console.log(error)
       );
     });
     console.log("Query complete..");
