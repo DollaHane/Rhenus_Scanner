@@ -37,12 +37,6 @@ export default function Home() {
   const viewMinX = (width - 300) / 2; 
   const viewMinY = (height - 100) / 2;
 
-  console.log("input:", input);
-  console.log("filePath:", filePath);
-  console.log("fileName:", fileName);
-  console.log("partNumber", partNumber);
-  console.log("partLocation", partLocation);
-
   // _______________________________________________________________
   // Fetch Latest File: = OK
 
@@ -59,13 +53,13 @@ export default function Home() {
       tx.executeSql(
         "SELECT * FROM csvdatas",
         [],
-        (txObj, resultSet) => {
+        (resultSet) => {
           const data = resultSet.rows._array;
           const latestFile = data[data.length - 1];
           setFilePath(latestFile.filepath);
           setFileName(latestFile.filename);
         },
-        (txObj, error) => console.log(error)
+        (error) => console.log(error)
       );
     });
     console.log("Query complete..");
@@ -107,7 +101,7 @@ export default function Home() {
 
   // _______________________________________________________________
   // Scan barcode:
-  const handleBarCodeScanned = ({ type, data, bounds }) => {
+  const handleBarCodeScanned = ({ data, bounds }) => {
     
     const { origin } = bounds;
     const isInCenteredRegion =
@@ -186,7 +180,7 @@ export default function Home() {
         >
         </BarCodeScanner>
         <View className="absolute -top-20 h-full w-full z-40">
-          <BarcodeMask edgeColor="#62B1F6" showAnimatedLine={false} width={280} height={80}/>
+          <BarcodeMask edgeColor="#ffffff" showAnimatedLine={false} width={280} height={80} edgeRadius={5} outerMaskOpacity={0.2}/>
         </View>
       </View>
     );
@@ -201,8 +195,8 @@ export default function Home() {
 
   if (!hasPermission) {
     return (
-      <View>
-        <Text>Please grant camera permissions to app.</Text>
+      <View className='items-center justify-center'>
+        <Text className='text-xl font-semibold'>Please grant camera permissions to app.</Text>
       </View>
     );
   }
