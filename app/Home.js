@@ -104,6 +104,7 @@ export default function Home() {
   const handleBarCodeScanned = ({ data, bounds }) => {
     
     const { origin } = bounds;
+
     const isInCenteredRegion =
       origin.x >= viewMinX &&
       origin.y >= viewMinY &&
