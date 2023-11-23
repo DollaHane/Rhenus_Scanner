@@ -34,8 +34,13 @@ export default function Home() {
   // Barcode Variables:
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
-  const viewMinX = (width - 300) / 2; 
-  const viewMinY = (height - 100) / 2;
+  const viewMinX = (width - 350) / 2; 
+  const viewMinY = (height / 2) + 120;
+
+  console.log('width', width)
+  console.log('height', height)
+  console.log('vmx', viewMinX)
+  console.log('vmy', viewMinY)
 
   // _______________________________________________________________
   // Fetch Latest File:
@@ -108,8 +113,8 @@ export default function Home() {
     const isInCenteredRegion =
       origin.x >= viewMinX &&
       origin.y >= viewMinY &&
-      origin.x <= viewMinX + 300 &&
-      origin.y <= viewMinY + 100;
+      origin.x <= viewMinX + 350 &&
+      origin.y <= viewMinY + 120;
 
     if (isInCenteredRegion) {
       if (data.includes("P") && data.length > 10) {
@@ -180,8 +185,10 @@ export default function Home() {
           className="flex-1 items-center justify-center bg-black z-30"
         >
         </BarCodeScanner>
-        <View className="absolute -top-20 h-full w-full z-40">
-          <BarcodeMask edgeColor="#ffffff" showAnimatedLine={false} width={280} height={80} edgeRadius={5} outerMaskOpacity={0.2}/>
+        <View className='absolute w-full h-full items-center justify-center z-40'>
+          <View className="w-full h-full">
+            <BarcodeMask edgeColor="#3a88fe" showAnimatedLine={false} width={250} height={60} edgeRadius={5} outerMaskOpacity={0.2}/>
+          </View>
         </View>
       </View>
     );
