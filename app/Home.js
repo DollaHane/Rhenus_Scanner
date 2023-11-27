@@ -7,7 +7,7 @@ import {
   View,
   ScrollView,
   TextInput,
-  Dimensions
+  Dimensions,
 } from "react-native";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
@@ -34,13 +34,15 @@ export default function Home() {
   // Barcode Variables:
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
-  const viewMinX = (width - 350) / 2; 
-  const viewMinY = (height / 2) + 120;
+  const viewMinX = (width - 350) / 2;
+  const viewMinY = height / 2 - 120;
+  const viewWidth = 350;
+  const viewHeight = 120;
 
-  console.log('width', width)
-  console.log('height', height)
-  console.log('vmx', viewMinX)
-  console.log('vmy', viewMinY)
+  console.log("width", width);
+  console.log("height", height);
+  console.log("vmx", viewMinX);
+  console.log("vmy", viewMinY);
 
   // _______________________________________________________________
   // Fetch Latest File:
@@ -107,14 +109,13 @@ export default function Home() {
   // _______________________________________________________________
   // Scan barcode:
   const handleBarCodeScanned = ({ data, bounds }) => {
-    
     const { origin } = bounds;
 
     const isInCenteredRegion =
       origin.x >= viewMinX &&
-      origin.y >= viewMinY &&
+      origin.y >= viewMinY + 175 &&
       origin.x <= viewMinX + 350 &&
-      origin.y <= viewMinY + 120;
+      origin.y <= viewMinY + 295;
 
     if (isInCenteredRegion) {
       if (data.includes("P") && data.length > 10) {
@@ -122,10 +123,10 @@ export default function Home() {
         alert(`Part number ${data} scanned successfully!`);
         fetchLocations(data);
       } else {
-        console.log(`Scanned data (${data}) is not a valid part number..`)
+        console.log(`Scanned data (${data}) is not a valid part number..`);
       }
     } else {
-      console.log('Barcode is not in the centered region:', origin);
+      console.log("Barcode is not in the centered region:", origin);
     }
   };
 
@@ -176,7 +177,7 @@ export default function Home() {
           className=" absolute top-8 right-8 z-50 w-10 h-10 bg-stone-50 rounded-md items-center justify-center"
           onPress={() => setReadyCamera(false)}
         >
-          <X className="text-zinc-800"/>
+          <X className="text-zinc-800" />
         </TouchableOpacity>
 
         {/* BARCODE SCANNER */}
@@ -184,12 +185,29 @@ export default function Home() {
           onBarCodeScanned={scanData ? undefined : handleBarCodeScanned}
           className="flex-1 items-center justify-center bg-black z-30"
         >
+          <View
+            style={{
+              position: "absolute",
+              left: viewMinX,
+              top: viewMinY,
+              width: viewWidth,
+              height: viewHeight,
+              // backgroundColor: 'white'
+            }}
+          >
+            <View className='relative w-full h-full border-white'>
+              <View className='absolute top-0 left-0 h-10 w-10 border-t-4 border-t-blue-400 border-l-4 border-l-blue-400 rounded-tl-lg'/>
+              <View className='absolute top-0 right-0 h-10 w-10 border-t-4 border-t-blue-400 border-r-4 border-r-blue-400 rounded-tr-lg'/>
+              <View className='absolute bottom-0 left-0 h-10 w-10 border-b-4 border-b-blue-400 border-l-4 border-l-blue-400 rounded-bl-lg'/>
+              <View className='absolute bottom-0 right-0 h-10 w-10 border-b-4 border-b-blue-400 border-r-4 border-r-blue-400 rounded-br-lg'/>
+            </View>
+          </View>
         </BarCodeScanner>
-        <View className='absolute w-full h-full items-center justify-center z-40'>
+        {/* <View className='absolute w-full h-full items-center justify-center z-40'>
           <View className="w-full h-full">
             <BarcodeMask edgeColor="#3a88fe" showAnimatedLine={false} width={250} height={60} edgeRadius={5} outerMaskOpacity={0.2}/>
           </View>
-        </View>
+        </View> */}
       </View>
     );
   };
@@ -203,8 +221,10 @@ export default function Home() {
 
   if (!hasPermission) {
     return (
-      <View className='items-center justify-center'>
-        <Text className='text-xl font-semibold'>Please grant camera permissions to app.</Text>
+      <View className="items-center justify-center">
+        <Text className="text-xl font-semibold">
+          Please grant camera permissions to app.
+        </Text>
       </View>
     );
   }
