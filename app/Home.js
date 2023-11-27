@@ -202,11 +202,6 @@ export default function Home() {
             </View>
           </View>
         </BarCodeScanner>
-        {/* <View className='absolute w-full h-full items-center justify-center z-40'>
-          <View className="w-full h-full">
-            <BarcodeMask edgeColor="#3a88fe" showAnimatedLine={false} width={250} height={60} edgeRadius={5} outerMaskOpacity={0.2}/>
-          </View>
-        </View> */}
       </View>
     );
   };
