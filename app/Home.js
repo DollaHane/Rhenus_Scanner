@@ -192,7 +192,6 @@ export default function Home() {
               top: viewMinY,
               width: viewWidth,
               height: viewHeight,
-              // backgroundColor: 'white'
             }}
           >
             <View className='relative w-full h-full border-white'>
