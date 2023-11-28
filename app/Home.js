@@ -31,6 +31,7 @@ export default function Home() {
   const [filePath, setFilePath] = useState([]);
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
+  
 
   // Barcode Variables:
   const width = Dimensions.get("window").width;
@@ -48,13 +49,13 @@ export default function Home() {
 
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXIST csvdatas (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT)"
+        "CREATE TABLE IF NOT EXIST csvdatabase (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
       );
     });
 
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatas",
+        "SELECT * FROM csvdatabase",
         [],
         (txObj, resultSet) => {
           const data = resultSet.rows._array;

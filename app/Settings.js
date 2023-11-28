@@ -9,22 +9,33 @@ export default function Settings() {
   const [filePath, setFilePath] = useState("");
   const [fileName, setFileName] = useState("");
 
+  const [date, setDate] = useState('')
+  
   // All Files
   const [datas, setDatas] = useState([]);
   const [info, setInfo] = useState(false);
+  
+  //_________________________________________________________
+  // Craete timestamp
+  const newDate = new Date()
+  
+  useEffect(() => {
+    setDate(newDate.toLocaleString())
+    console.log('date:', date)
+  }, [newDate]);
 
   //_________________________________________________________
   // Load initial state:
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS csvdatas (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT)"
+        "CREATE TABLE IF NOT EXISTS csvdatabase (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
       );
     });
 
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatas",
+        "SELECT * FROM csvdatabase ORDER BY id DESC",
         null,
         (txObj, resultSet) => {
           setDatas(resultSet.rows._array);
@@ -39,7 +50,7 @@ export default function Settings() {
   // Get the latest file being used:
   const getLatestFile = () => {
     if (datas.length > 0) {
-      const latestFile = datas[datas.length - 1];
+      const latestFile = datas[0];
       setFileName(latestFile.filename);
       setFilePath(latestFile.filepath);
     }
@@ -52,14 +63,14 @@ export default function Settings() {
   //_________________________________________________________
   // Delete old entries:
   const clearHistory = () => {
-    const firstItem = datas[0];
+    const oldestItem = datas[datas.length - 1];
 
     if (datas.length > 5) {
-      const itemId = firstItem.id;
+      const itemId = oldestItem.id;
 
       db.transaction((tx) => {
         tx.executeSql(
-          "DELETE FROM csvdatas WHERE id = ?",
+          "DELETE FROM csvdatabase WHERE id = ?",
           [itemId],
           (txObj, resultSet) => {
             console.log(
@@ -93,8 +104,8 @@ export default function Settings() {
 
       db.transaction((tx) => {
         tx.executeSql(
-          "INSERT INTO csvdatas (filename, filepath) values (?, ?)",
-          [name, path],
+          "INSERT INTO csvdatabase (filename, filepath, date) values (?, ?, ?)",
+          [name, path, date],
           (txObj, resultSet) => {
             console.log("resultSetId:", resultSet.insertId);
             console.log(`Successfully added file: ${name}`);
@@ -154,21 +165,20 @@ export default function Settings() {
             </Text>
             <Text className="mt-2 text-zinc-700 text-xs">
               In order to correctly process the data within the selected .csv
-              file, all the data needs to appear within the first column of the
-              .csv file.
+              file, please ensure the "Locator" is within column "C". Also "On-hand" and 
+              "Unpacked" part quantities should be in columns "H" and "L" respectfully.
             </Text>
             <Text className="mt-2 text-zinc-700 text-xs italic font-semibold">
-              Eg.: ",1E04957H01,WCC-13-3..,WCS-4-2..,1109C..,"
+              Eg.: "GLW	TUAM RD	WCG-7-1..	2E44671H01 TUBE INLET ACCUM TANK	EA 881	881"
             </Text>
             <Text className="mt-2 text-zinc-700 text-xs">
               As per the above example, after a successful scan event, the
-              application searches for a matching the part number (first entry
-              in the string) and then returns that part numbers warehouse
-              locations (subsequent entries seperated by a comma).
+              application searches for a matching the part number and then returns 
+              that part numbers warehouse locations as well as the quantities within 
+              each location.
             </Text>
-            <Text className="mt-5 text-zinc-700 text-base italic font-bold">
-              (Please contact the developer in the event the structure of the
-              .csv file has been revised.)
+            <Text className="mt-5 text-zinc-700 text-base italic font-medium">
+              (Developer email: shane@buidl.co.za)
             </Text>
           </View>
         </View>
@@ -204,7 +214,7 @@ export default function Settings() {
             <Text className="mt-5 pt-2 border-t-2 italic font-semibold border-stone-600">
               {files.filename}
             </Text>
-            <Text className="text-xs text-stone-400">{files.filepath}</Text>
+            <Text className="text-sm text-stone-500">{files.date}</Text>
           </View>
         ))}
       </View>
