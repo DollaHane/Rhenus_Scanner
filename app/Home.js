@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
-import BarcodeMask from "react-native-barcode-mask";
 import Papa from "papaparse";
 import NavBar from "./components/NavBar";
 import { db } from "../db/db";
@@ -25,11 +24,8 @@ export default function Home() {
   const [input, setInput] = useState();
   const [partNumber, setPartNumber] = useState();
   const [partLocation, setPartLocation] = useState([]);
-  const [onHandParts, setOnHandParts] = useState();
-  const [unpackedParts, setUnpackedParts] = useState();
 
   console.log("partLocations:", partLocation);
-  console.log("setParts", onHandParts, unpackedParts);
 
   // File State:
   const [filePath, setFilePath] = useState([]);
@@ -111,15 +107,16 @@ export default function Home() {
   // Scan barcode:
   const handleBarCodeScanned = ({ data, bounds }) => {
     const { origin } = bounds;
-
     const isInCenteredRegion =
       origin.x >= viewMinX &&
       origin.y >= viewMinY &&
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
+    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(.{11,})$/;
+
     if (isInCenteredRegion) {
-      if (data.includes("P") && data.length > 10) {
+      if (regex.test(data)) {
         setScanData(data);
         alert(`Part number ${data} scanned successfully!`);
         fetchLocations(data);
@@ -161,32 +158,18 @@ export default function Home() {
             return newArray;
           }
 
-          // Use the "formatData" function for each row / array
+          // Use the "formatData" function for each row / array. This keeps each rown as a separate array.
           for (let i = 0; i < matchingRows.length; i++) {
             const formattedData = formatData(matchingRows[i]);
             mainData.push(formattedData);
           }
 
-          // Extract the location data from column 3 of the csv file
-          const extractLocations = mainData.map((arr) => [arr[2]]);
-          setPartLocation(extractLocations.flat());
-
-          // Extract the on-hand and unpacked quantities from the end of each row / array
-          const extractedOnHand = mainData.map((arr) => arr[arr.length - 3]);
-          const extractedUnpacked = mainData.map((arr) => arr[arr.length - 2]);
-          const onHand = extractedOnHand.reduce(
-            (accumulator, currentValue) =>
-              accumulator + parseInt(currentValue, 10),
-            0
-          );
-          const unpacked = extractedUnpacked.reduce(
-            (accumulator, currentValue) =>
-              accumulator + parseInt(currentValue, 10),
-            0
-          );
-
-          setOnHandParts(onHand);
-          setUnpackedParts(unpacked);
+          const displayData = mainData.map((subArray) => [
+            subArray[2],
+            subArray[subArray.length - 3],
+            subArray[subArray.length - 2],
+          ]);
+          setPartLocation(displayData);
         }
       } else {
         console.log(`Part number ${partNumber} not found.`);
@@ -308,44 +291,49 @@ export default function Home() {
       {/* SCANNED DATA */}
       {scanData && (
         <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
-          <View className="absolute top-0 w-11/12 h-[75vh] p-5 items-center bg-stone-50  z-50">
+          <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50  z-50">
             <Text className="font-bold text-zinc-800 text-xl">
-              Part Number: {partNumber}
+              Part Number:{" "}
+              <Text className="w-28 font-bold text-blue-500">{partNumber}</Text>
             </Text>
 
-            <View className="w-full h-[250px] mt-5 border border-stone-300 rounded-lg px-2">
-              <Text className="font-bold text-blue-500 text-lg">
-                Locations:
-              </Text>
+            <View className="w-full h-[55vh] mt-5 border border-stone-300 rounded-lg px-2">
+              <View className="flex-row h-10 pt-1 border-b border-b-zinc-500">
+                <Text className="w-36 font-bold text-blue-500 text-lg">
+                  Locations:
+                </Text>
+                <Text className="w-20 font-bold text-blue-500 text-right text-lg">
+                  On-Hand:
+                </Text>
+                <Text className="w-28 font-bold text-blue-500 text-right text-lg">
+                  Unpicked:
+                </Text>
+              </View>
 
               <ScrollView className="w-full">
-                {partLocation.map((location) => (
-                  <Text
-                    className="italic mt-2 px-2 font-semibold text-xl"
-                    key={location}
-                  >
-                    - {location}
-                  </Text>
+                {partLocation.map((locationArray, index, innerIndex) => (
+                  <View key={index} className="flex-row">
+                    <Text
+                      className="w-36 italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
+                      index={innerIndex}
+                    >
+                      {locationArray[0]}
+                    </Text>
+                    <Text
+                      className="w-20 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
+                      index={innerIndex}
+                    >
+                      {locationArray[1]}
+                    </Text>
+                    <Text
+                      className="w-28 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
+                      index={innerIndex}
+                    >
+                      {locationArray[2]}
+                    </Text>
+                  </View>
                 ))}
               </ScrollView>
-            </View>
-
-            <View className="w-full mt-5">
-              <Text className="font-bold text-blue-500 text-lg">
-                Quantities:
-              </Text>
-              <View className="flex-row w-[60%] justify-between">
-                <Text className="mt-2 font-semibold text-xl">On Hand:</Text>
-                <Text className="mt-2 font-semibold text-xl italic text-rose-500">
-                  {onHandParts}
-                </Text>
-              </View>
-              <View className="flex-row w-[60%] justify-between">
-                <Text className="mt-1 font-semibold text-xl">Unpacked:</Text>
-                <Text className="mt-1 font-semibold text-xl italic text-rose-500">
-                  {unpackedParts}
-                </Text>
-              </View>
             </View>
 
             <View className="absolute bottom-5 w-full flex flex-row items-center justify-between">
