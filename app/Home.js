@@ -25,6 +25,11 @@ export default function Home() {
   const [input, setInput] = useState();
   const [partNumber, setPartNumber] = useState();
   const [partLocation, setPartLocation] = useState([]);
+  const [onHandParts, setOnHandParts] = useState()
+  const [unpackedParts, setUnpackedParts] = useState()
+
+  console.log('partLocations:', partLocation)
+  console.log('setParts', onHandParts, unpackedParts)
 
   // File State:
   const [filePath, setFilePath] = useState([]);
@@ -38,11 +43,6 @@ export default function Home() {
   const viewMinY = height / 2 - 120;
   const viewWidth = 350;
   const viewHeight = 120;
-
-  console.log("width", width);
-  console.log("height", height);
-  console.log("vmx", viewMinX);
-  console.log("vmy", viewMinY);
 
   // _______________________________________________________________
   // Fetch Latest File:
@@ -85,7 +85,8 @@ export default function Home() {
           .then((response) => response.text())
           .then((csvData) => {
             Papa.parse(csvData, {
-              delimiter: ";",
+              delimiter: "\t",
+              quoteChar: '"',
               complete: function (results) {
                 setCsvData(results.data);
               },
@@ -145,16 +146,44 @@ export default function Home() {
     }
 
     if (partNumber && csvData) {
-      const stringArray = csvData.find((row) => row[0].includes(partNumber));
-      if (stringArray) {
-        if (stringArray.length > 0) {
-          console.log("array", stringArray);
-          const data = stringArray[0];
-          const newArray = data.split(",");
-          const newData = newArray
-            .slice(3)
-            .filter((item) => item.trim() !== "");
-          setPartLocation(newData);
+      const matchingRows = csvData.filter((row) => row[0].includes(partNumber));
+      console.log("matchingRows:", matchingRows);
+
+      if (matchingRows) {
+        if (matchingRows.length > 0) {
+          const mainData = [];
+
+          function formatData(row) {
+            const data = row[0];
+            console.log("data", data);
+            const newArray = data.split(",").filter((item) => item !== "");
+            console.log("newArray", newArray);
+            return newArray;
+          }
+
+          for (let i = 0; i < matchingRows.length; i++) {
+            const formattedData = formatData(matchingRows[i]);
+            console.log("formattedData:", formattedData);
+            mainData.push(formattedData);
+          }
+
+          console.log("mainData", mainData);
+
+          const extractLocations = mainData.map(arr => [arr[2]])
+          setPartLocation(extractLocations.flat())
+          console.log('extractLocations', extractLocations)
+          const extractedOnHand = mainData.map(arr => arr[arr.length - 3])
+          const extractedUnpacked = mainData.map(arr => arr[arr.length - 2])
+          console.log('quantities:', extractedOnHand, extractedUnpacked)
+
+          const onHand = extractedOnHand.reduce((accumulator, currentValue) => accumulator + parseInt(currentValue, 10), 0);
+          const unpacked = extractedUnpacked.reduce((accumulator, currentValue) => accumulator + parseInt(currentValue, 10), 0);
+          console.log('totals:', onHand, unpacked)
+
+          setOnHandParts(onHand);
+          setUnpackedParts(unpacked);
+
+
         }
       } else {
         console.log(`Part number ${partNumber} not found.`);
@@ -194,11 +223,11 @@ export default function Home() {
               height: viewHeight,
             }}
           >
-            <View className='relative w-full h-full border-white'>
-              <View className='absolute top-0 left-0 h-10 w-10 border-t-4 border-t-blue-400 border-l-4 border-l-blue-400 rounded-tl-lg'/>
-              <View className='absolute top-0 right-0 h-10 w-10 border-t-4 border-t-blue-400 border-r-4 border-r-blue-400 rounded-tr-lg'/>
-              <View className='absolute bottom-0 left-0 h-10 w-10 border-b-4 border-b-blue-400 border-l-4 border-l-blue-400 rounded-bl-lg'/>
-              <View className='absolute bottom-0 right-0 h-10 w-10 border-b-4 border-b-blue-400 border-r-4 border-r-blue-400 rounded-br-lg'/>
+            <View className="relative w-full h-full border-white">
+              <View className="absolute top-0 left-0 h-10 w-10 border-t-4 border-t-blue-400 border-l-4 border-l-blue-400 rounded-tl-lg" />
+              <View className="absolute top-0 right-0 h-10 w-10 border-t-4 border-t-blue-400 border-r-4 border-r-blue-400 rounded-tr-lg" />
+              <View className="absolute bottom-0 left-0 h-10 w-10 border-b-4 border-b-blue-400 border-l-4 border-l-blue-400 rounded-bl-lg" />
+              <View className="absolute bottom-0 right-0 h-10 w-10 border-b-4 border-b-blue-400 border-r-4 border-r-blue-400 rounded-br-lg" />
             </View>
           </View>
         </BarCodeScanner>
@@ -281,7 +310,7 @@ export default function Home() {
               Part Number: {partNumber}
             </Text>
 
-            <View className="w-full h-[350px] mt-5 border border-stone-300 rounded-lg px-2">
+            <View className="w-full h-[250px] mt-5 border border-stone-300 rounded-lg px-2">
               <Text className="font-bold text-blue-500 text-lg">
                 Locations:
               </Text>
@@ -296,6 +325,18 @@ export default function Home() {
                   </Text>
                 ))}
               </ScrollView>
+            </View>
+
+            <View className='w-full mt-5'>
+              <Text className="font-bold text-blue-500 text-lg">Quantities:</Text>
+              <View className='flex-row w-[60%] justify-between'>
+                <Text className='mt-2 font-semibold text-xl'>On Hand:</Text>
+                <Text className='mt-2 font-semibold text-xl italic text-rose-500'>{onHandParts}</Text>
+              </View>
+              <View className='flex-row w-[60%] justify-between'>
+                <Text className='mt-1 font-semibold text-xl'>Unpacked:</Text>
+                <Text className='mt-1 font-semibold text-xl italic text-rose-500'>{unpackedParts}</Text>
+              </View>
             </View>
 
             <View className="absolute bottom-5 w-full flex flex-row items-center justify-between">
