@@ -25,11 +25,11 @@ export default function Home() {
   const [input, setInput] = useState();
   const [partNumber, setPartNumber] = useState();
   const [partLocation, setPartLocation] = useState([]);
-  const [onHandParts, setOnHandParts] = useState()
-  const [unpackedParts, setUnpackedParts] = useState()
+  const [onHandParts, setOnHandParts] = useState();
+  const [unpackedParts, setUnpackedParts] = useState();
 
-  console.log('partLocations:', partLocation)
-  console.log('setParts', onHandParts, unpackedParts)
+  console.log("partLocations:", partLocation);
+  console.log("setParts", onHandParts, unpackedParts);
 
   // File State:
   const [filePath, setFilePath] = useState([]);
@@ -146,44 +146,47 @@ export default function Home() {
     }
 
     if (partNumber && csvData) {
+      // Still finding rows that include the scanned part number.
       const matchingRows = csvData.filter((row) => row[0].includes(partNumber));
-      console.log("matchingRows:", matchingRows);
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
+          // Create a formatted array of arrays "mainData"
           const mainData = [];
 
+          // Split each string array using "," and remove empty items.
           function formatData(row) {
             const data = row[0];
-            console.log("data", data);
             const newArray = data.split(",").filter((item) => item !== "");
-            console.log("newArray", newArray);
             return newArray;
           }
 
+          // Use the "formatData" function for each row / array
           for (let i = 0; i < matchingRows.length; i++) {
             const formattedData = formatData(matchingRows[i]);
-            console.log("formattedData:", formattedData);
             mainData.push(formattedData);
           }
 
-          console.log("mainData", mainData);
+          // Extract the location data from column 3 of the csv file
+          const extractLocations = mainData.map((arr) => [arr[2]]);
+          setPartLocation(extractLocations.flat());
 
-          const extractLocations = mainData.map(arr => [arr[2]])
-          setPartLocation(extractLocations.flat())
-          console.log('extractLocations', extractLocations)
-          const extractedOnHand = mainData.map(arr => arr[arr.length - 3])
-          const extractedUnpacked = mainData.map(arr => arr[arr.length - 2])
-          console.log('quantities:', extractedOnHand, extractedUnpacked)
-
-          const onHand = extractedOnHand.reduce((accumulator, currentValue) => accumulator + parseInt(currentValue, 10), 0);
-          const unpacked = extractedUnpacked.reduce((accumulator, currentValue) => accumulator + parseInt(currentValue, 10), 0);
-          console.log('totals:', onHand, unpacked)
+          // Extract the on-hand and unpacked quantities from the end of each row / array
+          const extractedOnHand = mainData.map((arr) => arr[arr.length - 3]);
+          const extractedUnpacked = mainData.map((arr) => arr[arr.length - 2]);
+          const onHand = extractedOnHand.reduce(
+            (accumulator, currentValue) =>
+              accumulator + parseInt(currentValue, 10),
+            0
+          );
+          const unpacked = extractedUnpacked.reduce(
+            (accumulator, currentValue) =>
+              accumulator + parseInt(currentValue, 10),
+            0
+          );
 
           setOnHandParts(onHand);
           setUnpackedParts(unpacked);
-
-
         }
       } else {
         console.log(`Part number ${partNumber} not found.`);
@@ -327,15 +330,21 @@ export default function Home() {
               </ScrollView>
             </View>
 
-            <View className='w-full mt-5'>
-              <Text className="font-bold text-blue-500 text-lg">Quantities:</Text>
-              <View className='flex-row w-[60%] justify-between'>
-                <Text className='mt-2 font-semibold text-xl'>On Hand:</Text>
-                <Text className='mt-2 font-semibold text-xl italic text-rose-500'>{onHandParts}</Text>
+            <View className="w-full mt-5">
+              <Text className="font-bold text-blue-500 text-lg">
+                Quantities:
+              </Text>
+              <View className="flex-row w-[60%] justify-between">
+                <Text className="mt-2 font-semibold text-xl">On Hand:</Text>
+                <Text className="mt-2 font-semibold text-xl italic text-rose-500">
+                  {onHandParts}
+                </Text>
               </View>
-              <View className='flex-row w-[60%] justify-between'>
-                <Text className='mt-1 font-semibold text-xl'>Unpacked:</Text>
-                <Text className='mt-1 font-semibold text-xl italic text-rose-500'>{unpackedParts}</Text>
+              <View className="flex-row w-[60%] justify-between">
+                <Text className="mt-1 font-semibold text-xl">Unpacked:</Text>
+                <Text className="mt-1 font-semibold text-xl italic text-rose-500">
+                  {unpackedParts}
+                </Text>
               </View>
             </View>
 
