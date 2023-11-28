@@ -114,7 +114,7 @@ export default function Home() {
 
     const isInCenteredRegion =
       origin.x >= viewMinX &&
-      origin.y >= viewMinY + 175 &&
+      origin.y >= viewMinY &&
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
@@ -300,7 +300,7 @@ export default function Home() {
       {/* SCAN BUTTON */}
       <TouchableOpacity
         onPress={() => setReadyCamera(true)}
-        className="absolute top-44 bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
+        className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
         <Scan className=" text-zinc-700" size={88} />
       </TouchableOpacity>
