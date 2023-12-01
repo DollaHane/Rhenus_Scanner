@@ -114,7 +114,7 @@ export default function Home() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(.{11,})$/;
+    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*E)(?=.*G)(?=.*H)(.{9,})$/;
 
     if (isInCenteredRegion) {
       if (regex.test(data)) {
