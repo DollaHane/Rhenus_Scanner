@@ -16,7 +16,7 @@ import NavBar from "./components/NavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X } from "lucide-react-native";
 
-export default function Home() {
+export default function ScanPart() {
   // Camera State:
   const [hasPermission, setHasPermission] = useState(null);
   const [readyCamera, setReadyCamera] = useState(false);
@@ -268,7 +268,7 @@ export default function Home() {
           <TextInput
             value={input}
             onChangeText={(text) => setInput(text)}
-            placeholder="Search part number.."
+            placeholder="Search locations by part number.."
             className="w-full h-10 bg-zinc-100 border border-zinc-300 shadow-lg px-2 rounded-lg"
           />
           <TouchableOpacity
