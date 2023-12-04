@@ -16,16 +16,19 @@ import NavBar from "./components/NavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X } from "lucide-react-native";
 
+// ***************************************************************
+// This screen handles scanning locator barcodes to view the parts stored in that locator..
+
 export default function ScanLocation() {
   // Camera State:
   const [hasPermission, setHasPermission] = useState(null);
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
   const [input, setInput] = useState();
-  const [partNumber, setPartNumber] = useState();
-  const [partLocation, setPartLocation] = useState([]);
+  const [partNumber, setPartNumber] = useState([]);
+  const [locator, setLocator] = useState();
 
-  console.log("partLocations:", partLocation);
+  console.log("Locator:", locator);
 
   // File State:
   const [filePath, setFilePath] = useState([]);
@@ -114,13 +117,20 @@ export default function ScanLocation() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*E)(?=.*G)(?=.*H)(.{9,})$/;
+    // Start with "W", are shorter than 8 characters, and have at least 3 letters:
+    const regexOne = /^W.{1,7}[a-zA-Z]{3,}$/
+
+    // 3 numbers, contain at least 1 letter, and are shorter than 8 characters:
+    const regexTwo = /^.{1,7}\d{3}[^\d]$/
+
+    // Contain "STEINER" and "BARREL":
+    const regexThree = /(?=.*STEINER)(?=.*BARREL).*/
 
     if (isInCenteredRegion) {
-      if (regex.test(data)) {
+      if (regexOne.test(data) || regexTwo.test(data) || regexThree.test(data)) {
         setScanData(data);
-        alert(`Part number ${data} scanned successfully!`);
-        fetchLocations(data);
+        alert(`Locator number ${data} scanned successfully!`);
+        fetchPartNumbers(data);
       } else {
         console.log(`Scanned data (${data}) is not a valid part number..`);
       }
@@ -133,19 +143,18 @@ export default function ScanLocation() {
   const handleManualSearch = (input) => {
     console.log("Manual Search:", input);
     setScanData(input);
-    fetchLocations(input);
+    fetchPartNumbers(input);
   };
 
-  // Fetch locations of scanned part#:
-  const fetchLocations = (data) => {
+  // Fetch parts of scanned locator#:
+  const fetchPartNumbers = (data) => {
     if (data) {
-      const removeP = data.replace("P", "");
-      setPartNumber(removeP);
+      setLocator(data);
     }
 
-    if (partNumber && csvData) {
-      // Still finding rows that include the scanned part number.
-      const matchingRows = csvData.filter((row) => row[0].includes(partNumber));
+    if (locator && csvData) {
+      // Still finding rows that include the scanned locator number.
+      const matchingRows = csvData.filter((row) => row[0].includes(locator));
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
@@ -165,12 +174,11 @@ export default function ScanLocation() {
             mainData.push(formattedData);
           }
 
+          // Filter the data you want returned.
           const displayData = mainData.map((subArray) => [
-            subArray[2],
-            subArray[subArray.length - 3],
-            subArray[subArray.length - 2],
+            subArray[3],
           ]);
-          setPartLocation(displayData);
+          setPartNumber(displayData);
         }
       } else {
         console.log(`Part number ${partNumber} not found.`);
@@ -181,7 +189,7 @@ export default function ScanLocation() {
   };
 
   useEffect(() => {
-    fetchLocations();
+    fetchPartNumbers();
   }, [scanData]);
 
   // _______________________________________________________________
@@ -244,6 +252,7 @@ export default function ScanLocation() {
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
       {/* CAMERA COMPONENT */}
+      
       <Camera />
       {readyCamera && renderCamera()}
 
@@ -294,43 +303,25 @@ export default function ScanLocation() {
         <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
           <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50  z-50">
             <Text className="font-bold text-zinc-800 text-xl">
-              Part Number:{" "}
-              <Text className="w-28 font-bold text-blue-500">{partNumber}</Text>
+              Locator Number:{" "}
+              <Text className="w-28 font-bold text-blue-500">{locator}</Text>
             </Text>
 
             <View className="w-full h-[55vh] mt-5 border border-stone-300 rounded-lg px-2">
               <View className="flex-row h-10 pt-1 border-b border-b-zinc-500">
-                <Text className="w-36 font-bold text-blue-500 text-lg">
-                  Locations:
-                </Text>
-                <Text className="w-20 font-bold text-blue-500 text-right text-lg">
-                  On-Hand:
-                </Text>
-                <Text className="w-28 font-bold text-blue-500 text-right text-lg">
-                  Unpicked:
+                <Text className="w-full font-bold text-blue-500 text-lg">
+                  Parts at this location:
                 </Text>
               </View>
 
               <ScrollView className="w-full">
-                {partLocation.map((locationArray, index, innerIndex) => (
+                {partNumber.map((partArray, index, innerIndex) => (
                   <View key={index} className="flex-row">
                     <Text
-                      className="w-36 italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
+                      className="w-full italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
                       index={innerIndex}
                     >
-                      {locationArray[0]}
-                    </Text>
-                    <Text
-                      className="w-20 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
-                      index={innerIndex}
-                    >
-                      {locationArray[1]}
-                    </Text>
-                    <Text
-                      className="w-28 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
-                      index={innerIndex}
-                    >
-                      {locationArray[2]}
+                      {partArray[0]}
                     </Text>
                   </View>
                 ))}

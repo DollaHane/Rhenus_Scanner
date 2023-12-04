@@ -16,6 +16,9 @@ import NavBar from "./components/NavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X } from "lucide-react-native";
 
+// ***************************************************************
+// This screen handles scanning part barcodes to view their stored locations..
+
 export default function ScanPart() {
   // Camera State:
   const [hasPermission, setHasPermission] = useState(null);
