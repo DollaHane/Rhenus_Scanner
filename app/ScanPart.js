@@ -14,7 +14,7 @@ import { BarCodeScanner } from "expo-barcode-scanner";
 import Papa from "papaparse";
 import NavBar from "./components/NavBar";
 import { db } from "../db/db";
-import { Scan, RefreshCw, Search, X } from "lucide-react-native";
+import { Scan, RefreshCw, Search, X, Ungroup } from "lucide-react-native";
 
 // ***************************************************************
 // This screen handles scanning part barcodes to view their stored locations..
@@ -289,7 +289,8 @@ export default function ScanPart() {
         onPress={() => setReadyCamera(true)}
         className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
-        <Scan className=" text-zinc-700" size={88} />
+        <Scan className=" text-zinc-700" size={120} strokeWidth={1}/>
+        <Ungroup className="absolute text-zinc-700" size={40} />
       </TouchableOpacity>
 
       {/* SCANNED DATA */}
