@@ -21,7 +21,7 @@ import { Scan, RefreshCw, Search, X, Ungroup } from "lucide-react-native";
 
 export default function ScanPart() {
   // Camera State:
-  const [hasPermission, setHasPermission] = useState(null);
+  
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
   const [input, setInput] = useState();
@@ -117,7 +117,7 @@ export default function ScanPart() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*E)(?=.*G)(?=.*H)(.{9,})$/;
+    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*[EGH]).{9,}$/
 
     if (isInCenteredRegion) {
       if (regex.test(data)) {
@@ -225,22 +225,7 @@ export default function ScanPart() {
     );
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
-
-  if (!hasPermission) {
-    return (
-      <View className="items-center justify-center">
-        <Text className="text-xl font-semibold">
-          Please grant camera permissions to app.
-        </Text>
-      </View>
-    );
-  }
+ 
 
   // _______________________________________________________________
   // UI

@@ -1,13 +1,30 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text,
 } from "react-native";
+import { BarCodeScanner } from "expo-barcode-scanner";
 import { Link } from "expo-router";
 import NavBar from "./components/NavBar";
 import { Group, MapPinned } from "lucide-react-native";
 
 export default function Home() {
-  
+  const [hasPermission, setHasPermission] = useState(null);
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
+
+  if (!hasPermission) {
+    return (
+      <View className="items-center justify-center">
+        <Text className="text-xl font-semibold">
+          Please grant camera permissions to app.
+        </Text>
+      </View>
+    );
+  }
 
   // _______________________________________________________________
   // UI

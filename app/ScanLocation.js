@@ -21,7 +21,6 @@ import { Scan, RefreshCw, Search, X, MapPinned } from "lucide-react-native";
 
 export default function ScanLocation() {
   // Camera State:
-  const [hasPermission, setHasPermission] = useState(null);
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
   const [input, setInput] = useState();
@@ -118,10 +117,10 @@ export default function ScanLocation() {
       origin.y <= viewMinY + 295;
 
     // Start with "W", are shorter than 8 characters, and have at least 3 letters:
-    const regexOne = /^W.{1,7}[a-zA-Z]{3,}$/
+    const regexOne = /^W.{6}$/
 
     // 3 numbers, contain at least 1 letter, and are shorter than 8 characters:
-    const regexTwo = /^.{1,7}\d{3}[^\d]$/
+    const regexTwo = /^.{1,}\d{3}[^\d]$/
 
     // Contain "STEINER" and "BARREL":
     const regexThree = /(?=.*STEINER)(?=.*BARREL).*/
@@ -230,22 +229,7 @@ export default function ScanLocation() {
     );
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
-
-  if (!hasPermission) {
-    return (
-      <View className="items-center justify-center">
-        <Text className="text-xl font-semibold">
-          Please grant camera permissions to app.
-        </Text>
-      </View>
-    );
-  }
+  
 
   // _______________________________________________________________
   // UI
@@ -336,7 +320,7 @@ export default function ScanLocation() {
                 title="CLEAR"
                 onPress={() => {
                   setScanData(undefined);
-                  setPartLocation([]);
+                  setPartNumber([]);
                 }}
               >
                 <Text className="text-stone-100 font-semibold">CLEAR</Text>

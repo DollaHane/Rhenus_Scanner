@@ -1,9 +1,11 @@
 {
   "expo": {
     "name": "rhenusapp",
-    "slug": "rhenusapp",
+    "slug": "rhenusscanner",
     "version": "1.0.0",
-    "scheme": ["rhenusapp"],
+    "scheme": [
+      "rhenusapp"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -34,7 +36,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": "676b8062-bc1f-447b-8fea-59449617bd55"
+        "projectId": "eaa65cd5-08e3-4ba2-9b90-9e683a5ac293"
+      },
+      "router": {
+        "origin": false
       }
     },
     "owner": "dollahane",
