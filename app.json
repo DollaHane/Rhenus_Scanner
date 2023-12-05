@@ -3,7 +3,7 @@
     "name": "rhenusapp",
     "slug": "rhenusapp",
     "version": "1.0.0",
-    "scheme": "rhenusApp",
+    "scheme": ["rhenusapp"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
