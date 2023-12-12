@@ -116,24 +116,15 @@ export default function ScanLocation() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    // Start with "W", are shorter than 8 characters, and have at least 3 letters:
-    const regexOne = /^W.{6}$/
-
-    // 3 numbers, contain at least 1 letter, and are shorter than 8 characters:
-    const regexTwo = /^.{1,}\d{3}[^\d]$/
-
-    // Contain "STEINER" and "BARREL":
-    const regexThree = /(?=.*STEINER)(?=.*BARREL).*/
+    // const regexOne = /^W.{6}$/
+    // const regexTwo = /^.{1,}\d{3}[^\d]$/
+    // const regexThree = /(?=.*STEINER)(?=.*BARREL).*/
 
     if (isInCenteredRegion) {
-      if (regexOne.test(data) || regexTwo.test(data) || regexThree.test(data)) {
         setScanData(data);
         alert(`Locator number ${data} scanned successfully!`);
         fetchPartNumbers(data);
       } else {
-        console.log(`Scanned data (${data}) is not a valid part number..`);
-      }
-    } else {
       console.log("Barcode is not in the centered region:", origin);
     }
   };
