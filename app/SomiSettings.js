@@ -3,50 +3,64 @@ import { Text, View, TouchableOpacity } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { Info, X } from "lucide-react-native";
 import { db } from "../db/db";
+import Papa from "papaparse";
 
-export default function Settings() {
+export default function SomiSettings() {
+  // ******************** STATE MANAGEMENT ********************
+
   // File data
   const [filePath, setFilePath] = useState("");
   const [fileName, setFileName] = useState("");
+  const [csvData, setCsvData] = useState([]);
+  console.log("csvData Length:", csvData.length);
 
-  const [date, setDate] = useState('')
-  
   // All Files
   const [datas, setDatas] = useState([]);
   const [info, setInfo] = useState(false);
-  
-  //_________________________________________________________
-  // Craete timestamp
-  const newDate = new Date()
-  
+
+  // Create timestamp
+  const newDate = new Date();
+  const [date, setDate] = useState("");
+
   useEffect(() => {
-    setDate(newDate.toLocaleString())
-    console.log('date:', date)
+    setDate(newDate.toLocaleString());
+    console.log("date:", date);
   }, [newDate]);
 
-  //_________________________________________________________
-  // Load initial state:
+  // ******************** DATABASE MANAGEMENT ********************
+
   useEffect(() => {
+    //___________________________
+    // Create "somi" table for document file path..
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS csvdatabase (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
+        "CREATE TABLE IF NOT EXISTS somi (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
       );
     });
 
+    //___________________________
+    // Create "somidata" table to store the csv data..
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatabase ORDER BY id DESC",
+        "CREATE TABLE IF NOT EXISTS somidata (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT, date TEXT)"
+      );
+    });
+
+    //___________________________
+    // Fetch file paths to display history of selected files
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM somi ORDER BY id DESC",
         null,
         (txObj, resultSet) => {
           setDatas(resultSet.rows._array);
-          console.log("datas:", datas);
         },
         (txObj, error) => console.log(error)
       );
     });
   }, [db, filePath]);
 
-  //_________________________________________________________
+  //___________________________
   // Get the latest file being used:
   const getLatestFile = () => {
     if (datas.length > 0) {
@@ -60,8 +74,8 @@ export default function Settings() {
     getLatestFile();
   }, [datas]);
 
-  //_________________________________________________________
-  // Delete old entries:
+  //___________________________
+  // Delete old file paths:
   const clearHistory = () => {
     const oldestItem = datas[datas.length - 1];
 
@@ -70,13 +84,10 @@ export default function Settings() {
 
       db.transaction((tx) => {
         tx.executeSql(
-          "DELETE FROM csvdatabase WHERE id = ?",
+          "DELETE FROM somi WHERE id = ?",
           [itemId],
           (txObj, resultSet) => {
-            console.log(
-              `Successfully deleted file of id: ${itemId}. Result:`,
-              resultSet
-            );
+            console.log(`Successfully deleted file of id: ${itemId}. Result:`);
           },
           (txObj, error) => console.log(error)
         );
@@ -88,10 +99,13 @@ export default function Settings() {
     clearHistory();
   }, [datas]);
 
-  //_________________________________________________________
-  // Document Picker:
+  // ********** DOCUMENT DATA MANAGEMENT **********
+
+  //___________________________
+  // Function called when selecting a new document, inserts new csv data into the "somidata" table.
   const pickDocument = async () => {
     try {
+      // #1 : DOCUMENT PICKER
       const result = await DocumentPicker.getDocumentAsync({
         type: "*/*",
         multiple: false,
@@ -99,15 +113,13 @@ export default function Settings() {
 
       const path = result.assets[0].uri;
       const name = result.assets[0].name;
-      console.log("path:", path);
-      console.log("db:", db);
 
+      // #2 : INSERT FILE PATH INTO "somi"
       db.transaction((tx) => {
         tx.executeSql(
-          "INSERT INTO csvdatabase (filename, filepath, date) values (?, ?, ?)",
+          "INSERT INTO somi (filename, filepath, date) values (?, ?, ?)",
           [name, path, date],
           (txObj, resultSet) => {
-            console.log("resultSetId:", resultSet.insertId);
             console.log(`Successfully added file: ${name}`);
             setFileName(name);
             setFilePath(path);
@@ -117,14 +129,88 @@ export default function Settings() {
           }
         );
       });
+
+      // #3 : DELETE existing data in "somidata"
+      db.transaction((tx) => {
+        tx.executeSql(
+          "DELETE FROM somidata",
+          (txObj, resultSet) => {
+            console.log(
+              `Successfully deleted all csv data.`,
+              resultSet
+            );
+          },
+          (txObj, error) => console.log(error)
+        );
+      });
+
+      // #4 : TRANSLATE THE CSV FILE
+      if (path) {
+        fetch(path)
+          .then((response) => response.text())
+          .then((csvData) => {
+            Papa.parse(csvData, {
+              delimiter: "\t",
+              quoteChar: '"',
+              step: function (results) {
+                const data = results.data;
+
+                // #5 : INSERT data into "somidata"
+                const insertCsvData = async () => {
+                  await db.transaction((tx) => {
+                    data.forEach((row) => {
+                      tx.executeSql(
+                        "INSERT INTO somidata (data, date) values (?, ?)",
+                        [JSON.stringify(row), date],
+                        (txObj, resultSet) => {
+                          console.log(`Successfully added csv data: `);
+                        },
+                        (error) => {
+                          console.error(error);
+                          reject(error);
+                        }
+                      );
+                    });
+                  });
+                };
+                insertCsvData()
+              },
+            });
+          })
+          .catch((error) => {
+            console.error("Error reading the file:", error);
+          });
+      } else {
+        Alert.alert("File URL not available.");
+      }
     } catch (error) {
       console.error("Error picking document:", error);
     }
   };
 
+  // ********** FETCH CSV DATA FROM DATABASE **********
+
+  // #6 : Set the csvData
+  const fetchCsvData = async () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM somidata",
+        // "SELECT * FROM somidata WHERE id BETWEEN 2 and 3",
+        null,
+        (txObj, resultSet) => {
+          setCsvData(resultSet.rows._array);
+        },
+        (txObj, error) => console.log(error)
+      );
+    });
+  };
+
+  useEffect(() => {
+    fetchCsvData();
+  }, []);
+
   return (
     <View className="p-2 w-full h-full bg-stone-50">
-
       {/* SETTINGS PAGE INFO MODAL */}
       {info === true && (
         <View className="flex w-full h-full bg-stone-50 rounded-lg">
@@ -160,23 +246,7 @@ export default function Settings() {
               which represents the .csv file being used to find the locations of
               parts based on the part number scanned.
             </Text>
-            <Text className="text-lg mt-5 font-semibold text-zinc-800">
-              CSV File Format:
-            </Text>
-            <Text className="mt-2 text-zinc-700 text-xs">
-              In order to correctly process the data within the selected .csv
-              file, please ensure the "Locator" is within column "C". Also "On-hand" and 
-              "Unpacked" part quantities should be in columns "H" and "L" respectfully.
-            </Text>
-            <Text className="mt-2 text-zinc-700 text-xs italic font-semibold">
-              Eg.: "GLW	TUAM RD	WCG-7-1..	2E44671H01 TUBE INLET ACCUM TANK	EA 881	881"
-            </Text>
-            <Text className="mt-2 text-zinc-700 text-xs">
-              As per the above example, after a successful scan event, the
-              application searches for a matching the part number and then returns 
-              that part numbers warehouse locations as well as the quantities within 
-              each location.
-            </Text>
+
             <Text className="mt-5 text-zinc-700 text-base italic font-medium">
               (Developer email: shane@buidl.co.za)
             </Text>

@@ -12,30 +12,31 @@ import {
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Papa from "papaparse";
-import NavBar from "./components/NavBar";
+import SomiNavBar from "./components/SomiNavBar";
 import { db } from "../db/db";
-import { Scan, RefreshCw, Search, X, Ungroup } from "lucide-react-native";
+import { Scan, RefreshCw, Search, X, MapPinned } from "lucide-react-native";
 
 // ***************************************************************
-// This screen handles scanning part barcodes to view their stored locations..
+// This screen handles scanning locator barcodes to view the parts stored in that locator..
 
-export default function ScanPart() {
+export default function ScanOracleLocation() {
   // Camera State:
-  
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
   const [input, setInput] = useState();
-  const [partNumber, setPartNumber] = useState();
-  const [partLocation, setPartLocation] = useState([]);
+  const [partNumber, setPartNumber] = useState([]);
+  const [locator, setLocator] = useState();
 
-  console.log("partLocations:", partLocation);
+  console.log("Somi Locator:", locator);
 
   // File State:
   const [filePath, setFilePath] = useState([]);
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
+  if (csvData) {
+    console.log('csvData (Location):', csvData.length)
+  }
   
-
   // Barcode Variables:
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
@@ -52,13 +53,13 @@ export default function ScanPart() {
 
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXIST csvdatabase (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
+        "CREATE TABLE IF NOT EXIST somi (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
       );
     });
 
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatabase",
+        "SELECT * FROM somi",
         [],
         (txObj, resultSet) => {
           const data = resultSet.rows._array;
@@ -117,17 +118,12 @@ export default function ScanPart() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*[EGH]).{9,}$/
 
     if (isInCenteredRegion) {
-      if (regex.test(data)) {
         setScanData(data);
-        alert(`Part number ${data} scanned successfully!`);
-        fetchLocations(data);
+        alert(`Locator number ${data} scanned successfully!`);
+        fetchPartNumbers(data);
       } else {
-        console.log(`Scanned data (${data}) is not a valid part number..`);
-      }
-    } else {
       console.log("Barcode is not in the centered region:", origin);
     }
   };
@@ -136,29 +132,27 @@ export default function ScanPart() {
   const handleManualSearch = (input) => {
     console.log("Manual Search:", input);
     setScanData(input);
-    fetchLocations(input);
+    fetchPartNumbers(input);
   };
 
-  // Fetch locations of scanned part#:
-  const fetchLocations = (data) => {
+  // Fetch parts of scanned locator#:
+  const fetchPartNumbers = (data) => {
     if (data) {
-      const removeP = data.replace("P", "");
-      setPartNumber(removeP);
+      setLocator(data);
     }
 
-    if (partNumber && csvData) {
-      // Still finding rows that include the scanned part number.
-      const matchingRows = csvData.filter((row) => row[0].includes(partNumber));
+    if (locator && csvData) {
+      // Still finding rows that include the scanned locator number.
+      const matchingRows = csvData.filter((row) => new RegExp(`(^|,)${locator}($|,)`).test(row[0]));
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
           // Create a formatted array of arrays "mainData"
           const mainData = [];
-
           // Split each string array using "," and remove empty items.
           function formatData(row) {
             const data = row[0];
-            const newArray = data.split(",").filter((item) => item !== "");
+            const newArray = data.split(",");
             return newArray;
           }
 
@@ -168,12 +162,16 @@ export default function ScanPart() {
             mainData.push(formattedData);
           }
 
+          // Filter the data you want returned.
           const displayData = mainData.map((subArray) => [
-            subArray[2],
-            subArray[subArray.length - 3],
-            subArray[subArray.length - 2],
+            subArray[0], // Part Number
+            subArray[4], // Batch
+            subArray[5], // Material Description
+            subArray[subArray.length - 7], // Storage Bin
+            subArray[subArray.length - 6], // Available Stock
+            subArray[subArray.length - 4], // GR Date
           ]);
-          setPartLocation(displayData);
+          setPartNumber(displayData);
         }
       } else {
         console.log(`Part number ${partNumber} not found.`);
@@ -184,7 +182,7 @@ export default function ScanPart() {
   };
 
   useEffect(() => {
-    fetchLocations();
+    fetchPartNumbers();
   }, [scanData]);
 
   // _______________________________________________________________
@@ -225,13 +223,14 @@ export default function ScanPart() {
     );
   };
 
- 
+  
 
   // _______________________________________________________________
   // UI
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
       {/* CAMERA COMPONENT */}
+      
       <Camera />
       {readyCamera && renderCamera()}
 
@@ -256,7 +255,7 @@ export default function ScanPart() {
           <TextInput
             value={input}
             onChangeText={(text) => setInput(text)}
-            placeholder="Search locations by part number.."
+            placeholder="Search parts by locator number.."
             className="w-full h-10 bg-zinc-100 border border-zinc-300 shadow-lg px-2 rounded-lg"
           />
           <TouchableOpacity
@@ -275,65 +274,95 @@ export default function ScanPart() {
         className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
         <Scan className=" text-zinc-700" size={120} strokeWidth={1}/>
-        <Ungroup className="absolute text-zinc-700" size={40} />
+        <MapPinned className="absolute text-zinc-700" size={40} />
       </TouchableOpacity>
 
       {/* SCANNED DATA */}
       {scanData && (
         <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
-          <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50  z-50">
+          <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50 z-50">
+           
             <Text className="font-bold text-zinc-800 text-xl">
-              Part Number:{" "}
-              <Text className="w-28 font-bold text-blue-500">{partNumber}</Text>
+              Locator Number:{" "}
+              <Text className="w-28 font-bold text-blue-500">{locator}</Text>
             </Text>
 
-            <View className="w-full h-[55vh] mt-5 border border-stone-300 rounded-lg px-2">
-              <View className="flex-row h-10 pt-1 border-b border-b-zinc-500">
-                <Text className="w-36 font-bold text-blue-500 text-lg">
-                  Locations:
-                </Text>
-                <Text className="w-20 font-bold text-blue-500 text-right text-lg">
-                  On-Hand:
-                </Text>
-                <Text className="w-28 font-bold text-blue-500 text-right text-lg">
-                  Unpicked:
-                </Text>
-              </View>
+            <ScrollView horizontal className="w-full mt-5 border border-stone-300 rounded-lg px-2">
+              <ScrollView>
+                <View className="flex-row h-10 pt-1 border-b justify-center border-b-zinc-500">
+                  <Text className="w-20 px-1 font-bold text-blue-500">
+                    Part #:
+                  </Text>
+                  <Text className="w-32 px-1 font-bold text-blue-500">
+                    Batch #:
+                  </Text>
+                  <Text className="w-44 px-1 font-bold text-blue-500">
+                    Description:
+                  </Text>
+                  <Text className="w-20 px-1 font-bold text-blue-500 text-center">
+                    Bin #:
+                  </Text>
+                  <Text className="w-20 px-1 font-bold text-blue-500 text-center">
+                    Stock:
+                  </Text>
+                  <Text className="w-32 px-1 font-bold text-blue-500 text-center">
+                    GR Date:
+                  </Text>
+                </View>
 
-              <ScrollView className="w-full">
-                {partLocation.map((locationArray, index, innerIndex) => (
-                  <View key={index} className="flex-row">
-                    <Text
-                      className="w-36 italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
-                      index={innerIndex}
-                    >
-                      {locationArray[0]}
-                    </Text>
-                    <Text
-                      className="w-20 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
-                      index={innerIndex}
-                    >
-                      {locationArray[1]}
-                    </Text>
-                    <Text
-                      className="w-28 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
-                      index={innerIndex}
-                    >
-                      {locationArray[2]}
-                    </Text>
-                  </View>
-                ))}
+                <View className="">
+                  {partNumber.map((partArray, index, innerIndex) => (
+                    <View key={index} className="flex-row">
+                      <Text
+                        className="w-20 italic pt-1 px-1 pb-1 font-semibold text-sm border-b border-b-zinc-300 "
+                        index={innerIndex}
+                      >
+                        {partArray[0]}
+                      </Text>
+                      <Text
+                        className="w-32 italic pt-1 px-1 pb-1 font-semibold text-sm border-b border-b-zinc-300 border-l border-l-zinc-300"
+                        index={innerIndex}
+                      >
+                        {partArray[1]}
+                      </Text>
+                      <Text
+                        className="w-44 italic pt-1 px-1 pb-1 font-semibold text-sm border-b border-b-zinc-300 border-l border-l-zinc-300"
+                        index={innerIndex}
+                      >
+                        {partArray[2]}
+                      </Text>
+                      <Text
+                        className="w-20 italic pt-1 px-1 pb-1 font-semibold text-sm text-center border-b border-b-zinc-300 border-l border-l-zinc-300"
+                        index={innerIndex}
+                      >
+                        {partArray[3]}
+                      </Text>
+                      <Text
+                        className="w-20 italic pt-1 px-1 pb-1 font-semibold text-sm text-center border-b border-b-zinc-300 border-l border-l-zinc-300"
+                        index={innerIndex}
+                      >
+                        {partArray[4]}
+                      </Text>
+                      <Text
+                        className="w-32 italic pt-1 px-1 pb-1 font-semibold text-sm text-center border-b border-b-zinc-300 border-l border-l-zinc-300"
+                        index={innerIndex}
+                      >
+                        {partArray[5]}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </ScrollView>
-            </View>
+            </ScrollView>
 
-            <View className="absolute bottom-5 w-full flex flex-row items-center justify-between">
+            <View className="absolute bottom-1 px-5 w-full h-16 flex flex-row items-center justify-between bg-stone-50">
               <Text className="italic text-lg ">Clear to scan again.</Text>
               <TouchableOpacity
                 className="bg-zinc-800 text-stone-100 w-20 h-10 items-center justify-center rounded-md"
                 title="CLEAR"
                 onPress={() => {
                   setScanData(undefined);
-                  setPartLocation([]);
+                  setPartNumber([]);
                 }}
               >
                 <Text className="text-stone-100 font-semibold">CLEAR</Text>
@@ -343,7 +372,7 @@ export default function ScanPart() {
         </View>
       )}
 
-      <NavBar />
+      <SomiNavBar />
     </View>
   );
 }

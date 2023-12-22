@@ -12,14 +12,14 @@ import {
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import Papa from "papaparse";
-import NavBar from "./components/NavBar";
+import OracleNavBar from "./components/OracleNavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X, MapPinned } from "lucide-react-native";
 
 // ***************************************************************
 // This screen handles scanning locator barcodes to view the parts stored in that locator..
 
-export default function ScanLocation() {
+export default function ScanOracleLocation() {
   // Camera State:
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
@@ -33,7 +33,6 @@ export default function ScanLocation() {
   const [filePath, setFilePath] = useState([]);
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
-  
 
   // Barcode Variables:
   const width = Dimensions.get("window").width;
@@ -51,13 +50,13 @@ export default function ScanLocation() {
 
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXIST csvdatabase (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
+        "CREATE TABLE IF NOT EXIST oracle (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT, filepath TEXT, date TEXT)"
       );
     });
 
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM csvdatabase",
+        "SELECT * FROM oracle",
         [],
         (txObj, resultSet) => {
           const data = resultSet.rows._array;
@@ -121,10 +120,10 @@ export default function ScanLocation() {
     // const regexThree = /(?=.*STEINER)(?=.*BARREL).*/
 
     if (isInCenteredRegion) {
-        setScanData(data);
-        alert(`Locator number ${data} scanned successfully!`);
-        fetchPartNumbers(data);
-      } else {
+      setScanData(data);
+      alert(`Locator number ${data} scanned successfully!`);
+      fetchPartNumbers(data);
+    } else {
       console.log("Barcode is not in the centered region:", origin);
     }
   };
@@ -167,6 +166,8 @@ export default function ScanLocation() {
           // Filter the data you want returned.
           const displayData = mainData.map((subArray) => [
             subArray[3],
+            subArray[subArray.length - 3],
+            subArray[subArray.length - 2],
           ]);
           setPartNumber(displayData);
         }
@@ -220,14 +221,12 @@ export default function ScanLocation() {
     );
   };
 
-  
-
   // _______________________________________________________________
   // UI
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
       {/* CAMERA COMPONENT */}
-      
+
       <Camera />
       {readyCamera && renderCamera()}
 
@@ -270,7 +269,7 @@ export default function ScanLocation() {
         onPress={() => setReadyCamera(true)}
         className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
-        <Scan className=" text-zinc-700" size={120} strokeWidth={1}/>
+        <Scan className=" text-zinc-700" size={120} strokeWidth={1} />
         <MapPinned className="absolute text-zinc-700" size={40} />
       </TouchableOpacity>
 
@@ -285,8 +284,14 @@ export default function ScanLocation() {
 
             <View className="w-full h-[55vh] mt-5 border border-stone-300 rounded-lg px-2">
               <View className="flex-row h-10 pt-1 border-b border-b-zinc-500">
-                <Text className="w-full font-bold text-blue-500 text-lg">
-                  Parts at this location:
+                <Text className="w-36 font-bold text-blue-500 text-lg">
+                  Part Num.:
+                </Text>
+                <Text className="w-20 font-bold text-blue-500 text-right text-lg">
+                  On-Hand:
+                </Text>
+                <Text className="w-28 font-bold text-blue-500 text-right text-lg">
+                  Unpicked:
                 </Text>
               </View>
 
@@ -294,10 +299,22 @@ export default function ScanLocation() {
                 {partNumber.map((partArray, index, innerIndex) => (
                   <View key={index} className="flex-row">
                     <Text
-                      className="w-full italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
+                      className="w-36 italic mt-2 px-1 pb-1 font-semibold text-xl border-b border-b-zinc-300"
                       index={innerIndex}
                     >
                       {partArray[0]}
+                    </Text>
+                    <Text
+                      className="w-20 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
+                      index={innerIndex}
+                    >
+                      {partArray[1]}
+                    </Text>
+                    <Text
+                      className="w-28 italic mt-2 px-1 pb-1 font-semibold text-xl text-right border-b border-b-zinc-300"
+                      index={innerIndex}
+                    >
+                      {partArray[2]}
                     </Text>
                   </View>
                 ))}
@@ -321,7 +338,7 @@ export default function ScanLocation() {
         </View>
       )}
 
-      <NavBar />
+      <OracleNavBar />
     </View>
   );
 }
