@@ -152,28 +152,27 @@ export default function SomiSettings() {
             Papa.parse(csvData, {
               delimiter: "\t",
               quoteChar: '"',
-              step: function (results) {
+              chunk: function (results) {
                 const data = results.data;
+                console.log('length:', data.length)
 
                 // #5 : INSERT data into "somidata"
-                const insertCsvData = async () => {
-                  await db.transaction((tx) => {
-                    data.forEach((row) => {
-                      tx.executeSql(
-                        "INSERT INTO somidata (data, date) values (?, ?)",
-                        [JSON.stringify(row), date],
-                        (txObj, resultSet) => {
-                          console.log(`Successfully added csv data: `);
-                        },
-                        (error) => {
-                          console.error(error);
-                          reject(error);
-                        }
-                      );
-                    });
+                db.transaction((tx) => {
+                  data.forEach((row) => {
+                    tx.executeSql(
+                      "INSERT INTO somidata (data, date) values (?, ?)",
+                      [JSON.stringify(row), date],
+                      (txObj, resultSet) => {
+                        console.log(`Successfully added csv data: `);
+                      },
+                      (error) => {
+                        console.error(error);
+                        reject(error);
+                      }
+                    );
                   });
-                };
-                insertCsvData()
+                });
+
               },
             });
           })

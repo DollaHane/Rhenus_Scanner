@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
-import Papa from "papaparse";
 import SomiNavBar from "./components/SomiNavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X, Ungroup } from "lucide-react-native";
@@ -21,7 +20,7 @@ import { Scan, RefreshCw, Search, X, Ungroup } from "lucide-react-native";
 
 export default function ScanOraclePart() {
   // Camera State:
-  
+
   const [readyCamera, setReadyCamera] = useState(false);
   const [scanData, setScanData] = useState();
   const [input, setInput] = useState();
@@ -34,7 +33,9 @@ export default function ScanOraclePart() {
   const [filePath, setFilePath] = useState([]);
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
-  
+  if (csvData) {
+    console.log("csvData (Part):", csvData.length);
+  }
 
   // Barcode Variables:
   const width = Dimensions.get("window").width;
@@ -69,43 +70,24 @@ export default function ScanOraclePart() {
         (txObj, error) => console.log(error)
       );
     });
+
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM somidata",
+        null,
+        (txObj, resultSet) => {
+          setCsvData(resultSet.rows._array);
+        },
+        (txObj, error) => console.log(error)
+      );
+    });
+
     console.log("Query complete..");
   };
 
   useEffect(() => {
     query();
   }, [db]);
-
-  // _______________________________________________________________
-  // Translate CSV File:
-  const translateCsv = async () => {
-    try {
-      if (filePath) {
-        fetch(filePath)
-          .then((response) => response.text())
-          .then((csvData) => {
-            Papa.parse(csvData, {
-              delimiter: "\t",
-              quoteChar: '"',
-              complete: function (results) {
-                setCsvData(results.data);
-              },
-            });
-          })
-          .catch((error) => {
-            console.error("Error reading the file:", error);
-          });
-      } else {
-        Alert.alert("File URL not available.");
-      }
-    } catch (error) {
-      console.error("Error translating CSV file:", error);
-    }
-  };
-
-  useEffect(() => {
-    translateCsv();
-  }, [filePath]);
 
   // _______________________________________________________________
   // Scan barcode:
@@ -117,7 +99,7 @@ export default function ScanOraclePart() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*[EGH]).{9,}$/
+    const regex = /^(?=.*[A-Za-z].*[A-Za-z])(?=.*P)(?=.*[EGH]).{9,}$/;
 
     if (isInCenteredRegion) {
       if (regex.test(data)) {
@@ -147,7 +129,9 @@ export default function ScanOraclePart() {
 
     if (partNumber && csvData) {
       // Still finding rows that include the scanned part number.
-      const matchingRows = csvData.filter((row) => new RegExp(`(^|,)${locator}($|,)`).test(row[0]));
+      const matchingRows = csvData.filter((row) =>
+        new RegExp(`(^|,)${locator}($|,)`).test(row[0])
+      );
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
@@ -227,8 +211,6 @@ export default function ScanOraclePart() {
     );
   };
 
- 
-
   // _______________________________________________________________
   // UI
   return (
@@ -276,7 +258,7 @@ export default function ScanOraclePart() {
         onPress={() => setReadyCamera(true)}
         className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
-        <Scan className=" text-zinc-700" size={120} strokeWidth={1}/>
+        <Scan className=" text-zinc-700" size={120} strokeWidth={1} />
         <Ungroup className="absolute text-zinc-700" size={40} />
       </TouchableOpacity>
 
@@ -284,13 +266,15 @@ export default function ScanOraclePart() {
       {scanData && (
         <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
           <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50  z-50">
-            
             <Text className="font-bold text-zinc-800 text-xl">
               Part Number:{" "}
               <Text className="w-28 font-bold text-blue-500">{partNumber}</Text>
             </Text>
 
-            <ScrollView horizontal className="w-full mt-5 border border-stone-300 rounded-lg px-2">
+            <ScrollView
+              horizontal
+              className="w-full mt-5 border border-stone-300 rounded-lg px-2"
+            >
               <ScrollView>
                 <View className="flex-row h-10 pt-1 border-b justify-center border-b-zinc-500">
                   <Text className="w-20 px-1 font-bold text-blue-500">

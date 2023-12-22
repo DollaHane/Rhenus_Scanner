@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Alert } from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
-import Papa from "papaparse";
 import SomiNavBar from "./components/SomiNavBar";
 import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X, MapPinned } from "lucide-react-native";
@@ -34,9 +33,9 @@ export default function ScanOracleLocation() {
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
   if (csvData) {
-    console.log('csvData (Location):', csvData.length)
+    console.log("csvData (Location):", csvData.length);
   }
-  
+
   // Barcode Variables:
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
@@ -70,43 +69,24 @@ export default function ScanOracleLocation() {
         (txObj, error) => console.log(error)
       );
     });
+
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM somidata",
+        null,
+        (txObj, resultSet) => {
+          setCsvData(resultSet.rows._array);
+        },
+        (txObj, error) => console.log(error)
+      );
+    });
+
     console.log("Query complete..");
   };
 
   useEffect(() => {
     query();
   }, [db]);
-
-  // _______________________________________________________________
-  // Translate CSV File:
-  const translateCsv = async () => {
-    try {
-      if (filePath) {
-        fetch(filePath)
-          .then((response) => response.text())
-          .then((csvData) => {
-            Papa.parse(csvData, {
-              delimiter: "\t",
-              quoteChar: '"',
-              complete: function (results) {
-                setCsvData(results.data);
-              },
-            });
-          })
-          .catch((error) => {
-            console.error("Error reading the file:", error);
-          });
-      } else {
-        Alert.alert("File URL not available.");
-      }
-    } catch (error) {
-      console.error("Error translating CSV file:", error);
-    }
-  };
-
-  useEffect(() => {
-    translateCsv();
-  }, [filePath]);
 
   // _______________________________________________________________
   // Scan barcode:
@@ -118,12 +98,11 @@ export default function ScanOracleLocation() {
       origin.x <= viewMinX + 350 &&
       origin.y <= viewMinY + 295;
 
-
     if (isInCenteredRegion) {
-        setScanData(data);
-        alert(`Locator number ${data} scanned successfully!`);
-        fetchPartNumbers(data);
-      } else {
+      setScanData(data);
+      alert(`Locator number ${data} scanned successfully!`);
+      fetchPartNumbers(data);
+    } else {
       console.log("Barcode is not in the centered region:", origin);
     }
   };
@@ -143,7 +122,9 @@ export default function ScanOracleLocation() {
 
     if (locator && csvData) {
       // Still finding rows that include the scanned locator number.
-      const matchingRows = csvData.filter((row) => new RegExp(`(^|,)${locator}($|,)`).test(row[0]));
+      const matchingRows = csvData.filter((row) =>
+        new RegExp(`(^|,)${locator}($|,)`).test(row[0])
+      );
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
@@ -223,14 +204,12 @@ export default function ScanOracleLocation() {
     );
   };
 
-  
-
   // _______________________________________________________________
   // UI
   return (
     <View className="flex-1 h-full items-center text-white justify-center bg-stone-50 z-30">
       {/* CAMERA COMPONENT */}
-      
+
       <Camera />
       {readyCamera && renderCamera()}
 
@@ -273,7 +252,7 @@ export default function ScanOracleLocation() {
         onPress={() => setReadyCamera(true)}
         className="absolute top-[30vh] bg-stone-100 border border-slate-200 w-60 h-60 rounded-full items-center justify-center shadow-2xl shadow-slate-500"
       >
-        <Scan className=" text-zinc-700" size={120} strokeWidth={1}/>
+        <Scan className=" text-zinc-700" size={120} strokeWidth={1} />
         <MapPinned className="absolute text-zinc-700" size={40} />
       </TouchableOpacity>
 
@@ -281,13 +260,15 @@ export default function ScanOracleLocation() {
       {scanData && (
         <View className="absolute w-full h-full items-center justify-center bg-stone-50 z-40">
           <View className="absolute top-3 w-11/12 h-[75vh] p-2 items-center bg-stone-50 z-50">
-           
             <Text className="font-bold text-zinc-800 text-xl">
               Locator Number:{" "}
               <Text className="w-28 font-bold text-blue-500">{locator}</Text>
             </Text>
 
-            <ScrollView horizontal className="w-full mt-5 border border-stone-300 rounded-lg px-2">
+            <ScrollView
+              horizontal
+              className="w-full mt-5 border border-stone-300 rounded-lg px-2"
+            >
               <ScrollView>
                 <View className="flex-row h-10 pt-1 border-b justify-center border-b-zinc-500">
                   <Text className="w-20 px-1 font-bold text-blue-500">
