@@ -27,6 +27,7 @@ export default function ScanOraclePart() {
   const [partNumber, setPartNumber] = useState();
   const [partLocation, setPartLocation] = useState([]);
 
+  console.log('partNumber:', partNumber)
   console.log("partLocations:", partLocation);
 
   // File State:
@@ -34,7 +35,7 @@ export default function ScanOraclePart() {
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
   if (csvData) {
-    console.log("csvData (Part):", csvData.length);
+    console.log("csvData (Part):", csvData[1].data);
   }
 
   // Barcode Variables:
@@ -129,23 +130,30 @@ export default function ScanOraclePart() {
 
     if (partNumber && csvData) {
       // Still finding rows that include the scanned part number.
-      const matchingRows = csvData.filter((row) =>
-        new RegExp(`(^|,)${locator}($|,)`).test(row[0])
-      );
+      const matchingRows = []
+      for (let i = 0; i < csvData.length; i++) {
+        const data = csvData[i].data
+        const parsedData = JSON.parse(data)
+        if ( new RegExp(`(^|)${partNumber}($|,)`).test(parsedData) ) {
+          matchingRows.push(parsedData)
+        }
+      }
+
+      console.log('matchingRows:', matchingRows)
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
           // Create a formatted array of arrays "mainData"
           const mainData = [];
 
-          // Split each string array using "," and remove empty items.
+          // Split each string array using ",".
           function formatData(row) {
             const data = row[0];
             const newArray = data.split(",");
             return newArray;
           }
 
-          // Use the "formatData" function for each row / array. This keeps each rown as a separate array.
+          // Use the "formatData" function for each row / array. This keeps each row as a separate array.
           for (let i = 0; i < matchingRows.length; i++) {
             const formattedData = formatData(matchingRows[i]);
             mainData.push(formattedData);
@@ -298,7 +306,7 @@ export default function ScanOraclePart() {
                 </View>
 
                 <View className="">
-                  {partNumber.map((partArray, index, innerIndex) => (
+                  {partLocation.map((partArray, index, innerIndex) => (
                     <View key={index} className="flex-row">
                       <Text
                         className="w-20 italic pt-1 px-1 pb-1 font-semibold text-sm border-b border-b-zinc-300 "

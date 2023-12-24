@@ -16,7 +16,7 @@ import { db } from "../db/db";
 import { Scan, RefreshCw, Search, X, MapPinned } from "lucide-react-native";
 
 // ***************************************************************
-// This screen handles scanning locator barcodes to view the parts stored in that locator..
+// This screen handles scanning locator barcodes to view the parts stored at that location..
 
 export default function ScanOracleLocation() {
   // Camera State:
@@ -33,7 +33,7 @@ export default function ScanOracleLocation() {
   const [fileName, setFileName] = useState([]);
   const [csvData, setCsvData] = useState();
   if (csvData) {
-    console.log("csvData (Location):", csvData.length);
+    console.log("csvData (Location):", csvData[1].data);
   }
 
   // Barcode Variables:
@@ -122,9 +122,15 @@ export default function ScanOracleLocation() {
 
     if (locator && csvData) {
       // Still finding rows that include the scanned locator number.
-      const matchingRows = csvData.filter((row) =>
-        new RegExp(`(^|,)${locator}($|,)`).test(row[0])
-      );
+      const matchingRows = []
+      for (let i = 0; i < csvData.length; i++) {
+        const data = csvData[i].data
+        const parsedData = JSON.parse(data)
+        if ( new RegExp(`(^|,)${locator}($|,)`).test(parsedData) ) {
+          matchingRows.push(parsedData)
+        }
+      }
+      console.log('matchingRows:', matchingRows)
 
       if (matchingRows) {
         if (matchingRows.length > 0) {
@@ -155,10 +161,10 @@ export default function ScanOracleLocation() {
           setPartNumber(displayData);
         }
       } else {
-        console.log(`Part number ${partNumber} not found.`);
+        console.log(`Location number ${locator} not found.`);
       }
     } else {
-      console.log("Part number is undefined.");
+      console.log("Location number is undefined.");
     }
   };
 
